@@ -144,6 +144,13 @@ contract Base is Wallet, Influence, Expire {
     address[] childsCount;
     address[] listCount;
     
+    function getCategoryNameDefault() returns (string) {
+        
+        string index = categoryNamesCount[0];
+        
+        return categoryNames[index];
+    }
+    
     function getChildByAddress(address childAddress) returns (Base){
         
         return childs[childAddress];
@@ -203,7 +210,7 @@ contract Base is Wallet, Influence, Expire {
 contract Personn is Base {
     
     bytes1 personnalCountryIdCardNubmer;
-    bytes1[] public personnalCountryIdCardNubmers;
+    bytes1[] personnalCountryIdCardNubmers;
     
     function setPersonnalCountryIdCardNubmer(bytes1 _personnalCountryIdCardNubmer){
         
@@ -256,9 +263,7 @@ contract CodeGroup is Base {}
 contract Bid is Base {
     
     uint amountMin;
-    
     uint increaseMax = 0;
-    
     Artefact price;
 
     function setDateStart(uint _dateStart){
@@ -312,8 +317,8 @@ contract AwardGroup is Base {}
 
 contract CampaignEshop is Base {
     
-    BidGroup public bidGroup;
-    ArtefactGroup public artefactGroup;
+    BidGroup bidGroup;
+    ArtefactGroup artefactGroup;
     
     function setBidGroup(BidGroup _bidGroup) {
         
@@ -344,8 +349,8 @@ contract CampaignEshopGroup is Base {}
 
 contract CampaignOrg is Base {
     
-    AwardGroup public awardGroup;
-    GranteeGroup public granteeGroup;
+    AwardGroup awardGroup;
+    GranteeGroup granteeGroup;
     
     function setAwardGroup(AwardGroup _awardGroup){
         
@@ -374,49 +379,49 @@ contract CampaignOrgGroup is Base {}
 
 contract Eshop is PersonnGroup  {
     
-    function createArtefact(bytes1 _artefactSerialNumber, bytes1 _imageUrl, uint _amount, string _categoryName, string _refExtern) 
+    function createArtefact(bytes1 _artefactSerialNumber, bytes1 _imageUrl) 
         returns (Artefact artefact) {
         
         artefact = new Artefact();
-        artefact.create(_amount, _categoryName, _refExtern);
+        artefact.create(amount, getCategoryNameDefault(), refExtern);
         artefact.setArtefactSerialNumber(_artefactSerialNumber);
         artefact.setImageUrl(_imageUrl);
         
         return artefact;
     }
     
-    function createArtefactGroup(uint _amount, string _categoryName, string _refExtern) 
+    function createArtefactGroup() 
         returns (ArtefactGroup artefactGroup) {
         
         artefactGroup = new ArtefactGroup();
-        artefactGroup.create(_amount, _categoryName, _refExtern);
+        artefactGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return artefactGroup;
     }
     
-    function createCode(uint _amount, string _categoryName, string _refExtern) 
+    function createCode() 
         returns (Code code) {
         
         code = new Code();
-        code.create(_amount, _categoryName, _refExtern);
+        code.create(amount, getCategoryNameDefault(), refExtern);
         
         return code;
     }
     
-    function createCodeGroup(uint _amount, string _categoryName, string _refExtern) 
+    function createCodeGroup()  
         returns (CodeGroup codeGroup) {
         
         codeGroup = new CodeGroup();
-        codeGroup.create(_amount, _categoryName, _refExtern);
+        codeGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return codeGroup;
     }
     
-    function createBid(uint _dateStart, uint _duration, uint _amountMin, uint _amount, string _categoryName, string _refExtern) 
+    function createBid(uint _dateStart, uint _duration, uint _amountMin) 
         returns (Bid bid) {
         
         bid = new Bid();
-        bid.create(_amount, _categoryName, _refExtern);
+        bid.create(amount, getCategoryNameDefault(), refExtern);
         bid.setDuration(_duration);
         bid.setAmountMin(_amountMin);
         bid.setDateStart(_dateStart);
@@ -426,144 +431,169 @@ contract Eshop is PersonnGroup  {
         return bid;
     }
     
-    function createBidGroup(uint _amount, string _categoryName, string _refExtern) 
+    function createBidGroup() 
         returns (BidGroup bidGroup) {
         
         bidGroup = new BidGroup();
-        bidGroup.create(_amount, _categoryName, _refExtern);
+        bidGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return bidGroup;
     }
     
-    function createCampaignEshop(uint _amount, string _categoryName, string _refExtern)
+    function createCampaignEshop()
         returns (CampaignEshop campaignEshop) {
         
         campaignEshop = new CampaignEshop();
-        campaignEshop.create(_amount, _categoryName, _refExtern);
+        campaignEshop.create(amount, getCategoryNameDefault(), refExtern);
         
         return campaignEshop;
     }
     
-    function createCampaignEshopGroup(uint _amount, string _categoryName, string _refExtern)
+    function createCampaignEshopGroup()
         returns (CampaignEshopGroup campaignEshopGroup) {
         
         campaignEshopGroup = new CampaignEshopGroup();
-        campaignEshopGroup.create(_amount, _categoryName, _refExtern);
+        campaignEshopGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return campaignEshopGroup;
     }
     
-    function simpleBid (bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin, uint _amount, string _categoryName, string _refExtern)
-        returns (Bid bid){
+    function simpleBid (bytes1[] _artefactSerialNumbers, bytes1[] _imageUrls, uint[] _dateStarts, uint[] _durations, uint[] _amountMins)
+        returns (Bid bid) {
             
-        ArtefactGroup artefactGroup = createArtefactGroup(_amount, _categoryName, _refExtern);
-        BidGroup bidGroup = createBidGroup(_amount, _categoryName, _refExtern);
-        CampaignEshop campaignEshop = createCampaignEshop(_amount, _categoryName, _refExtern);
-        CampaignEshopGroup campaignEshopGroup = createCampaignEshopGroup(_amount, _categoryName, _refExtern);
+        ArtefactGroup artefactGroup = createArtefactGroup();
+        BidGroup bidGroup = createBidGroup();
+        uint artefactSerialNumbersLength = _artefactSerialNumbers.length;
         
-        for (uint i = 0; i < _artefactSerialNumbers.length; i++) {
+        for (uint i = 0; i < artefactSerialNumbersLength; i++) {
              
             bytes1 artefactSerialNumber = _artefactSerialNumbers[i];
-            Artefact artefact = createArtefact(_artefactSerialNumbers[i], _imageURls[i], _amount, _categoryName, _refExtern);
-            artefactGroup.addChild(artefact);
+            bytes1 imageUrl = _imageUrls[i];
+            uint dateStart = _dateStarts[i];
+            uint duration = _durations[i];
+            uint amountMin = _amountMins[i];
             
-            bid = createBid(_dateStart[i], _duration[i], _amountMin[i], _amount, _categoryName, _refExtern);
+            delete _artefactSerialNumbers[i];
+            delete _imageUrls[i];
+            delete _dateStarts[i];
+            delete _durations[i];
+            delete _amountMins[i];
+            
+            Artefact artefact = createArtefact(artefactSerialNumber, imageUrl);
+            artefactGroup.addChild(artefact);
+            bid = createBid(dateStart, duration, amountMin);
             bid.setPrice(artefact);
             bidGroup.addChild(bid);
         }
-        campaignEshop.setArtefactGroup(artefactGroup); 
-        campaignEshop.setBidGroup(bidGroup); 
-        campaignEshop.auction();
-        
-        campaignEshopGroup.addChild(campaignEshop);
-        
-        addChild(campaignEshopGroup);
+        simpleBidFinish(artefactGroup, bidGroup);
         
         return bid;
+    }
+    
+    function simpleBidFinish (ArtefactGroup artefactGroup, BidGroup bidGroup) {
+            
+        CampaignEshop campaignEshop = createCampaignEshop();
+        campaignEshop.setArtefactGroup(artefactGroup); 
+        
+        delete artefactGroup;
+        
+        campaignEshop.setBidGroup(bidGroup); 
+        
+        delete bidGroup;
+        
+        campaignEshop.auction();
+        CampaignEshopGroup campaignEshopGroup = createCampaignEshopGroup();
+        campaignEshopGroup.addChild(campaignEshop);
+        
+        delete campaignEshop;
+        
+        addChild(campaignEshopGroup);
     }
 }
 
 contract Org is PersonnGroup  {
     
-    function createGrantee(bytes1 _personnalCountryIdCardNubmer, uint _amount, string _categoryName, string _refExtern) 
+    function createGrantee(bytes1 _personnalCountryIdCardNubmer) 
         returns (Grantee grantee) {
         
         grantee = new Grantee();
-        grantee.create(_amount, _categoryName, _refExtern);
+        grantee.create(amount, getCategoryNameDefault(), refExtern);
         grantee.transferOwnership(grantee);
         grantee.setPersonnalCountryIdCardNubmer(_personnalCountryIdCardNubmer);
         
         return grantee;
     }
     
-    function createGranteeGroup(uint _amount, string _categoryName, string _refExtern)
+    function createGranteeGroup()
         returns (GranteeGroup granteeGroup) {
         
         granteeGroup = new GranteeGroup();
-        granteeGroup.create(_amount, _categoryName, _refExtern);
+        granteeGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return granteeGroup;
     }
     
-    function createAward(uint _amount, string _categoryName, string _refExtern)
+    function createAward()
         returns (Award award) {
         
         award = new Award();
-        award.create(_amount, _categoryName, _refExtern);
+        award.create(amount, getCategoryNameDefault(), refExtern);
         
         return award;
     }
     
-    function createAwardGroup(uint _amount, string _categoryName, string _refExtern)
+    function createAwardGroup()
         returns (AwardGroup awardGroup) {
         
         awardGroup = new AwardGroup();
-        awardGroup.create(_amount, _categoryName, _refExtern);
+        awardGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return awardGroup;
     }
     
-    function createCampaignOrg(uint _amount, string _categoryName, string _refExtern)
+    function createCampaignOrg()
         returns (CampaignOrg campaignOrg) {
         
         campaignOrg = new CampaignOrg();
-        campaignOrg.create(_amount, _categoryName, _refExtern);
+        campaignOrg.create(amount, getCategoryNameDefault(), refExtern);
         
         return campaignOrg;
     }
     
-    function createCampaignOrgGroup(uint _amount, string _categoryName, string _refExtern)
+    function createCampaignOrgGroup()
         returns (CampaignOrgGroup campaignOrgGroup) {
         
         campaignOrgGroup = new CampaignOrgGroup();
-        campaignOrgGroup.create(_amount, _categoryName, _refExtern);
+        campaignOrgGroup.create(amount, getCategoryNameDefault(), refExtern);
         
         return campaignOrgGroup;
     }
     
-    function simpleAward(bytes1[] _personnalCountryIdCardNubmers, uint _amount, string _categoryName, string _refExtern)
+    function simpleAward(bytes1[] _personnalCountryIdCardNubmers)
         returns (Award award){
             
-        GranteeGroup granteeGroup = createGranteeGroup(_amount, _categoryName, _refExtern);
-        AwardGroup awardGroup = createAwardGroup(_amount, _categoryName, _refExtern);
-        CampaignOrg campaignOrg = createCampaignOrg(_amount, _categoryName, _refExtern);
-        CampaignOrgGroup campaignOrgGroup = createCampaignOrgGroup(_amount, _categoryName, _refExtern);
+        GranteeGroup granteeGroup = createGranteeGroup();
+        AwardGroup awardGroup = createAwardGroup();
         
         for (uint i = 0; i < _personnalCountryIdCardNubmers.length; i++) {
             
             bytes1 personnalCountryIdCardNubmer = _personnalCountryIdCardNubmers[i];
-            Grantee grantee = createGrantee(personnalCountryIdCardNubmer, _amount, _categoryName, _refExtern);
+            delete _personnalCountryIdCardNubmers[i];
+            Grantee grantee = createGrantee(personnalCountryIdCardNubmer);
             granteeGroup.addChild(grantee);
-            
-            award = createAward(_amount, _categoryName, _refExtern);
+            delete grantee;
+            award = createAward();
             awardGroup.addChild(award);
         }
+        CampaignOrg campaignOrg = createCampaignOrg();
         campaignOrg.setAwardGroup(awardGroup); 
-        campaignOrg.setGranteeGroup(granteeGroup); 
+        delete awardGroup;
+        campaignOrg.setGranteeGroup(granteeGroup);
+        delete granteeGroup; 
         campaignOrg.distribute();
-        
+        CampaignOrgGroup campaignOrgGroup = createCampaignOrgGroup();
         campaignOrgGroup.addChild(campaignOrg);
-        
+        delete campaignOrg; 
         addChild(campaignOrgGroup);
         
         return award;
@@ -576,31 +606,31 @@ contract GiftCoin is Base {
     mapping(address => Eshop) public eshops;
     mapping(address => Personn) public personns;
 
-    function createOrg(uint _amount, string _categoryName, string _refExtern)
+    function createOrg()
         public returns (Org org) {
         
         org = new Org();
-        org.create(_amount, _categoryName, _refExtern);
+        org.create(amount, getCategoryNameDefault(), refExtern);
         orgs[org] = org;
         
         return org;
     }
     
-    function createEshop(uint _amount, string _categoryName, string _refExtern)
+    function createEshop()
         public returns (Eshop eshop) {
         
         eshop = new Eshop();
-        eshop.create(_amount, _categoryName, _refExtern);
+        eshop.create(amount, getCategoryNameDefault(), refExtern);
         eshops[eshop] = eshop;
         
         return eshop;
     }
     
-    function createPersonn(bytes1 _personnalCountryIdCardNubmer, uint _amount, string _categoryName, string _refExtern) 
+    function createPersonn(bytes1 _personnalCountryIdCardNubmer) 
         public returns (Personn personn) {
         
         personn = new Personn();
-        personn.create(_amount, _categoryName, _refExtern);
+        personn.create(amount, getCategoryNameDefault(), refExtern);
         personn.setPersonnalCountryIdCardNubmer(_personnalCountryIdCardNubmer);
         personn.transferOwnership(personn);
         personns[personn] = personn;
@@ -614,19 +644,19 @@ contract GiftCoin is Base {
         org.buy(_amount);
     }
     
-    function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers, uint _amount, string _categoryName, string _refExtern) public returns (Award award){
+    function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers) public returns (Award award){
         
         Org org = orgs[orgAddress];
-        award = org.simpleAward(_personnalCountryIdCardNubmers, _amount, _categoryName, _refExtern);
+        award = org.simpleAward(_personnalCountryIdCardNubmers);
         
         return award;
     }
     
-    function eshopSimpleBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin, uint _amount, string _categoryName, string _refExtern) public 
+    function eshopSimpleBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
         returns (Bid bid) {
         
         Eshop eshop = eshops[eshopAddress];
-        bid = eshop.simpleBid(_artefactSerialNumbers, _imageURls, _dateStart, _duration, _amountMin, _amount, _categoryName, _refExtern);
+        bid = eshop.simpleBid(_artefactSerialNumbers, _imageURls, _dateStart, _duration, _amountMin);
         
         return bid;
     }
