@@ -289,6 +289,24 @@ contract Base is Wallet, Influence, Expire {
     mapping(address => Base) childs;
     mapping(address => Base) list;
     
+    function bytes32ToString(bytes32 x) constant returns (string) {
+        
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
+        }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
+    }
+    
     function getCategoryNameDefault() returns (string) {
         
         string index = categoryNamesCount[0];
@@ -354,10 +372,10 @@ contract Base is Wallet, Influence, Expire {
 
 contract Personn is Base {
     
-    bytes1 personnalCountryIdCardNubmer;
-    bytes1[] personnalCountryIdCardNubmers;
+    bytes32 personnalCountryIdCardNubmer;
+    bytes32[] personnalCountryIdCardNubmers;
     
-    function setPersonnalCountryIdCardNubmer(bytes1 _personnalCountryIdCardNubmer){
+    function setPersonnalCountryIdCardNubmer(bytes32 _personnalCountryIdCardNubmer){
         
         personnalCountryIdCardNubmer = _personnalCountryIdCardNubmer;
         uint personnalCountryIdCardNubmersCountIndex = personnalCountryIdCardNubmers.length;
@@ -369,20 +387,20 @@ contract PersonnGroup is Personn  {}
 
 contract Artefact is Base  {
     
-    bytes1 artefactSerialNumber;
-    bytes1[] public artefactSerialNumbers;
+    string artefactSerialNumber;
+    string[] public artefactSerialNumbers;
     
-    bytes1 imageUrl;
-    bytes1[] public imageUrls;
+    string imageUrl;
+    string[] public imageUrls;
     
-    function setArtefactSerialNumber(bytes1 _artefactSerialNumber){
+    function setArtefactSerialNumber(string _artefactSerialNumber){
         
         artefactSerialNumber = _artefactSerialNumber;
         uint artefactSerialNumbersCountIndex = artefactSerialNumbers.length;
         artefactSerialNumbers[artefactSerialNumbersCountIndex] = _artefactSerialNumber;
     }
     
-    function setImageUrl(bytes1 _imageUrl){
+    function setImageUrl(string _imageUrl){
         
         imageUrl = _imageUrl;
         uint imageUrlsCountIndex = imageUrls.length;
@@ -394,7 +412,7 @@ contract ArtefactGroup is Base  {}
 
 contract Code is Base, Artefact {}
 
-contract CodeGroup is Base, AtefractGroup {}
+contract CodeGroup is Base, ArtefactGroup {}
 
 contract Bid is Base {
     
@@ -533,7 +551,7 @@ contract CampaignOrgGroup is Base {}
 
 contract Eshop is PersonnGroup  {
     
-    function createArtefact(bytes1 _artefactSerialNumber, bytes1 _imageUrl) 
+    function createArtefact(string _artefactSerialNumber, string _imageUrl) 
         returns (Artefact artefact) {
         
         artefact = new Artefact();
@@ -594,7 +612,7 @@ contract Eshop is PersonnGroup  {
         return campaignEshopGroup;
     }
     
-    function simpleBid (bytes1[] _artefactSerialNumbers, bytes1[] _imageUrls, uint[] _dateStarts, uint[] _durations, uint[] _amountMins)
+    function simpleBid (bytes32[] _artefactSerialNumbers, bytes32[] _imageUrls, uint[] _dateStarts, uint[] _durations, uint[] _amountMins)
         returns (Bid bid) {
             
         ArtefactGroup artefactGroup = createArtefactGroup();
@@ -603,8 +621,8 @@ contract Eshop is PersonnGroup  {
         
         for (uint i = 0; i < artefactSerialNumbersLength; i++) {
              
-            bytes1 artefactSerialNumber = _artefactSerialNumbers[i];
-            bytes1 imageUrl = _imageUrls[i];
+            string memory artefactSerialNumber = bytes32ToString(_artefactSerialNumbers[i]);
+            string memory imageUrl = bytes32ToString(_imageUrls[i]);
             uint dateStart = _dateStarts[i];
             uint duration = _durations[i];
             uint amountMin = _amountMins[i];
@@ -649,7 +667,7 @@ contract Eshop is PersonnGroup  {
 
 contract Org is PersonnGroup  {
     
-    function createGrantee(bytes1 _personnalCountryIdCardNubmer) 
+    function createGrantee(bytes32 _personnalCountryIdCardNubmer) 
         returns (Grantee grantee) {
         
         grantee = new Grantee();
@@ -705,7 +723,7 @@ contract Org is PersonnGroup  {
         return campaignOrgGroup;
     }
     
-    function simpleAward(bytes1[] _personnalCountryIdCardNubmers)
+    function simpleAward(bytes32[] _personnalCountryIdCardNubmers)
         returns (Award award){
             
         GranteeGroup granteeGroup = createGranteeGroup();
@@ -713,7 +731,7 @@ contract Org is PersonnGroup  {
         
         for (uint i = 0; i < _personnalCountryIdCardNubmers.length; i++) {
             
-            bytes1 personnalCountryIdCardNubmer = _personnalCountryIdCardNubmers[i];
+            bytes32 personnalCountryIdCardNubmer = _personnalCountryIdCardNubmers[i];
             delete _personnalCountryIdCardNubmers[i];
             Grantee grantee = createGrantee(personnalCountryIdCardNubmer);
             granteeGroup.addChild(grantee);
@@ -768,7 +786,7 @@ contract GiftCoin is Base, Coin {
         return eshop;
     }
     
-    function createPersonn(bytes1 _personnalCountryIdCardNubmer) public 
+    function createPersonn(bytes32 _personnalCountryIdCardNubmer) public 
         returns (Personn personn) {
         
         personn = new Personn();
@@ -780,12 +798,12 @@ contract GiftCoin is Base, Coin {
         return personn;
     }
     
-    function orgBuy(address orgAddress, uint _amount) public {
+    function orgBuy(address orgAddress, uint _amount) public  payable {
         
         buy(orgAddress, _amount);
     }
     
-    function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers) public 
+    function orgSimpleAward(address orgAddress, bytes32[] _personnalCountryIdCardNubmers) public 
     returns (Award award){
         
         Org org = orgs[orgAddress];
@@ -795,27 +813,27 @@ contract GiftCoin is Base, Coin {
         return award;
     }
     
-    function eshopSimpleCodes(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName) public 
+    function eshopSimpleCodes(address eshopAddress, bytes32[] _artefactSerialNumbers, bytes32[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName) public 
         returns (Code[] codes){
             
         for (uint i = 0; i < _artefactSerialNumbers.length; i++) {
         
-            bytes1 artefactAmount = _artefactAmounts[i];
-            bytes1 refExtern = _artefactSerialNumbers[i];
-            bytes1 imageURl = _imageURls[i];
+            uint artefactAmount = _artefactAmounts[i];
+            string memory refExtern = bytes32ToString(_artefactSerialNumbers[i]);
+            string memory imageURl = bytes32ToString(_imageURls[i]);
         
             delete _artefactAmounts[i];
             delete _artefactSerialNumbers[i];
             delete _imageURls[i];
                 
-            code = new Code();
+            Code code = new Code();
             code.transferOwnership(eshopAddress);
             code.create(_amount, _categoryName, refExtern);
             uint codeIndex = codes.length;
             Artefact artefact = new Artefact();
             artefact.transferOwnership(eshopAddress);
             artefact.create(artefactAmount, _categoryName, refExtern);
-            artefact.setArtefactSerialNumber(refExtern){
+            artefact.setArtefactSerialNumber(refExtern);
             artefact.setImageUrl(imageURl);
             code.AddChild(artefact);
             delete artefact;
@@ -824,7 +842,7 @@ contract GiftCoin is Base, Coin {
         return codes;
     }
     
-    function eshopSimpleBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
+    function eshopSimpleBid(address eshopAddress, bytes32[] _artefactSerialNumbers, bytes32[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
         returns (Bid bid) {
         
         Eshop eshop = eshops[eshopAddress];
@@ -836,7 +854,7 @@ contract GiftCoin is Base, Coin {
         return bid;
     }
     
-    function eshopSimpleCodesAndBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
+    function eshopSimpleCodesAndBid(address eshopAddress, bytes32[] _artefactSerialNumbers, bytes32[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
         returns (Bid bid) {
             
         Code[] codes = eshopSimpleCodes(eshopAddress, _artefactSerialNumbers, _artefactAmounts, _amount, _categoryName);
@@ -845,7 +863,7 @@ contract GiftCoin is Base, Coin {
         return bid;
     }
     
-    function personnBidIncrease(address _from, address _bidAddress, uint amountIncrease) public {
+    function personnBidIncrease(address _from, address _bidAddress, uint amountIncrease) public payable {
 
         bidIncrease(_from, _bidAddress, amountIncrease);
     }
