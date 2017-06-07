@@ -77,7 +77,7 @@ contract Influence  {
     }
 }
 
-contract Coin is Base, Wallet, Influence {
+contract Coin is Wallet, Influence {
     
     function getRate() return (uint) public {
         
