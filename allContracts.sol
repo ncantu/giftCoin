@@ -2,9 +2,9 @@ pragma solidity ^0.4.11;
 
 contract Owned {
     
-    address public masterOwner;
-    address public owner;
-    address public winnerAddress;
+    address masterOwner;
+    address owner;
+    address winnerAddress;
 
     function owned() {
         owner = msg.sender;
@@ -31,16 +31,16 @@ contract Owned {
 
 contract Wallet is Owned{
 
-    uint public unitTotalArtefactSell = 0;
-    uint public unitTotalArtefactBuy = 0;
+    uint unitTotalArtefactSell = 0;
+    uint unitTotalArtefactBuy = 0;
     
-    uint public amountTotalArtefactSell = 0;
-    uint public amountTotalArtefactBuy = 0;
+    uint amountTotalArtefactSell = 0;
+    uint amountTotalArtefactBuy = 0;
     
-    uint public amountTotalCoinSell = 0;
-    uint public amountTotalCoinBuy = 0;
+    uint amountTotalCoinSell = 0;
+    uint amountTotalCoinBuy = 0;
     
-    uint public amount = 0;
+    uint amount = 0;
     
     function transferOwnership(address newOwner) onlyOwner {
         owner = newOwner;
@@ -51,15 +51,20 @@ contract Wallet is Owned{
         owner = winnerAddress;
         owner.transfer(amount);
     }
+    
+    function getAmount() returns (uint) {
+        
+        return amount;
+    }
 }
 
 contract Influence  {
 
-    uint public weightUnitTotal = 0;
-    uint public weightValueTotal = 0;
+    uint weightUnitTotal = 0;
+    uint weightValueTotal = 0;
     
-    uint public weightUnit = 0;
-    uint public weightValue = 0;
+    uint weightUnit = 0;
+    uint weightValue = 0;
     
     function getWeightUnit() returns (uint) {
         
@@ -74,10 +79,10 @@ contract Influence  {
 
 contract Expire {
     
-    uint public expireState = 0; // 0:closed 1:running 2:expired
-    uint public dateStart = 0;
-    uint public duration = 0;
-    uint public amountMin = 0;
+    uint expireState = 0; // 0:closed 1:running 2:expired
+    uint dateStart = 0;
+    uint duration = 0;
+    uint amountMin = 0;
     
     function setDateStart(uint _dateStart){
         
@@ -129,15 +134,15 @@ contract Expire {
 
 contract Base is Wallet, Influence, Expire {
     
-    uint public id;
-    string public refExtern = "default";
-    mapping(string => string) public categoryNames;
-    mapping(address => Base) public childs;
-    mapping(address => Base) public list;
+    uint id;
+    string refExtern = "default";
+    mapping(string => string) categoryNames;
+    mapping(address => Base) childs;
+    mapping(address => Base) list;
     
-    string[] public categoryNamesCount;
-    address[] public childsCount;
-    address[] public listCount;
+    string[] categoryNamesCount;
+    address[] childsCount;
+    address[] listCount;
     
     function getChildByAddress(address childAddress) returns (Base){
         
@@ -191,7 +196,7 @@ contract Base is Wallet, Influence, Expire {
         childs[child] = child;
         uint childsCountIndex = childsCount.length;
         childsCount[childsCountIndex] = child;
-        amount += child.amount();
+        amount += child.getAmount();
     }
 }
 
