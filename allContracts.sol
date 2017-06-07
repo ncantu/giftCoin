@@ -79,6 +79,14 @@ contract Influence  {
 
 contract Coin is Base, Wallet, Influence {
     
+    function getRate() return (uint) public {
+        
+        weightValueTotal = amountTotalArtefactSell;
+        weightValue = amountTotalCoinBuy;
+        
+        return getWeightValue();
+    }
+    
     function bidIncrease(address from, address _codeAddress, address _artefactAddress, uint amountIncrease) {
         
         
