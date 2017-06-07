@@ -10,6 +10,12 @@ contract Owned {
         
         owner = msg.sender;
     }
+    
+    function getOwner() 
+        returns (address) {
+        
+        return owner;
+    }
 
     modifier onlyOwner {
         
@@ -192,11 +198,7 @@ contract Coin is MyToken, Wallet, Influence {
         
         Bid bid = bids[_bidAddress];
         bool res = bid.increase(_from, amountIncrease);
-        if(res == true && bid.getExpireState() == 2) {
-            
-            transferFrom(bid.getWinnerAddress(), bid.owner, bid.getWinnerIncrease());
-            return true;
-        }
+        
         return false;
     }
     
@@ -383,7 +385,7 @@ contract Code is Base {}
 
 contract CodeGroup is Base {}
 
-contract Bid is Base {
+contract Bid is Base, MyToken {
     
     uint amountMin;
     uint increaseMax = 0;
@@ -422,6 +424,7 @@ contract Bid is Base {
         if(expireTest() == true) {
             
             expire();
+            transferFrom(getWinnerAddress(), getOwner(), getWinnerIncrease());
             return true;
         }
         require(_amountIncrease > increaseMax);
@@ -790,6 +793,11 @@ contract GiftCoin is Base, Coin {
         bids[bid] = bid;
         
         return bid;
+    }
+    
+    function bidExpireTest(address _bidAddress) public {
+
+        bids[_bidAddress].expireTest();
     }
     
     function personnBidIncrease(address _from, address _bidAddress, uint amountIncrease) public {
