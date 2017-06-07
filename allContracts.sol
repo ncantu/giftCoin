@@ -187,9 +187,17 @@ contract Coin is MyToken, Wallet, Influence {
         return getWeightValue();
     }
     
-    function bidIncrease(address _from, address _bidAddress, uint amountIncrease) payable {
+    function bidIncrease(address _from, address _bidAddress, uint amountIncrease) 
+        payable returns (bool) {
         
         Bid bid = bids[_bidAddress];
+        bool res = bid.increase(_from, amountIncrease);
+        if(res === true && bid.getExpireState() == 2) {
+            
+            transferFrom(getWinnerAddress(), bid.owner, bid.getWinnerIncrease());
+            return true;
+        }
+        return false;
     }
     
     function buy(address _from, address _to, uint _amount) payable {
@@ -224,6 +232,11 @@ contract Expire {
     function setDuration(uint _duration){
         
         duration = _duration;
+    }
+    
+    function getExpireState() return (uint) {
+        
+        return expireState;
     }
     
     function expireTest() returns (bool) {
@@ -375,6 +388,18 @@ contract Bid is Base {
     uint amountMin;
     uint increaseMax = 0;
     Artefact price;
+    
+    function getWinnerAddress() returns (address) {
+        
+        return winnerAddress;
+    }
+    
+    function getWinnerIncrease() returns (uint) {
+        
+        require(expirestate != 2 && expirestate != 0); 
+        
+        return increaseMax;
+    }
 
     function setDateStart(uint _dateStart){
         
@@ -392,19 +417,17 @@ contract Bid is Base {
         amount = amountMin;
     }
     
-    function increase(address _artefactAddress, uint _amountIncrease) returns (bool) {
-        
-        require(msg.value > increaseMax);
+    function increase(address _from, uint _amountIncrease) returns (bool) {
         
         if(expireTest() == true) {
             
             expire();
-            transferOwnershipToWinner();
-            
-            return false;
+            return true;
         }
+        require(_amountIncrease > increaseMax);
+        
         increaseMax = _amountIncrease;
-        winnerAddress = _artefactAddress;
+        winnerAddress = _from;
         
         return true;
     }
@@ -710,6 +733,7 @@ contract GiftCoin is Base, Coin {
     mapping(address => Org) public orgs;
     mapping(address => Eshop) public eshops;
     mapping(address => Personn) public personns;
+    mapping(address => Award) public awards;
 
     function createOrg()
         public returns (Org org) {
@@ -752,6 +776,7 @@ contract GiftCoin is Base, Coin {
         
         Org org = orgs[orgAddress];
         award = org.simpleAward(_personnalCountryIdCardNubmers);
+        awards[award] = award;
         
         return award;
     }
@@ -767,8 +792,8 @@ contract GiftCoin is Base, Coin {
         return bid;
     }
     
-    function personnBidIncrease(address personnAddress, address _bidAddress, uint amountIncrease) public {
+    function personnBidIncrease(address _from, address _bidAddress, uint amountIncrease) public {
 
-        bidIncrease(personnAddress, _bidAddress, amountIncrease);
+        bidIncrease(_from, _bidAddress, amountIncrease);
     }
 }
