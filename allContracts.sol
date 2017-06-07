@@ -192,7 +192,7 @@ contract Coin is MyToken, Wallet, Influence {
         
         Bid bid = bids[_bidAddress];
         bool res = bid.increase(_from, amountIncrease);
-        if(res === true && bid.getExpireState() == 2) {
+        if(res == true && bid.getExpireState() == 2) {
             
             transferFrom(getWinnerAddress(), bid.owner, bid.getWinnerIncrease());
             return true;
