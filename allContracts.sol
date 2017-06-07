@@ -7,15 +7,18 @@ contract Owned {
     address winnerAddress;
 
     function owned() {
+        
         owner = msg.sender;
     }
 
     modifier onlyOwner {
+        
         if (msg.sender != owner) throw;
         _;
     }
 
     function transferOwnership(address newOwner) onlyOwner {
+        
         owner = newOwner;
     }
     
@@ -25,6 +28,7 @@ contract Owned {
     }
 
     function transferOwnershipToWinner() {
+        
         owner = winnerAddress;
     }
 }
@@ -43,11 +47,13 @@ contract Wallet is Owned{
     uint amount = 0;
     
     function transferOwnership(address newOwner) onlyOwner {
+        
         owner = newOwner;
         owner.transfer(amount);
     }
     
     function transferOwnershipToWinner() {
+        
         owner = winnerAddress;
         owner.transfer(amount);
     }
@@ -72,14 +78,14 @@ contract Influence  {
     }
     
     function getWeightValue() returns (uint) {
-       
+        
        return weightValue / weightValueTotal; 
     }
 }
 
 contract Coin is Wallet, Influence {
     
-    function getRate() return (uint) public {
+    function getRate() returns (uint) public {
         
         weightValueTotal = amountTotalArtefactSell;
         weightValue = amountTotalCoinBuy;
@@ -87,14 +93,14 @@ contract Coin is Wallet, Influence {
         return getWeightValue();
     }
     
-    function bidIncrease(address from, address _codeAddress, address _artefactAddress, uint amountIncrease) {
+    function bidIncrease(address from, address _bidAddress, uint amountIncrease) payable {
         
-        
+        from.transfer(amountIncrease);
     }
     
-    function buy(address from, address to, uint _amount) {
+    function buy(address from, address to, uint _amount) payable {
         
-        
+        from.transfer(_amount);
     }
 }
 
@@ -117,7 +123,6 @@ contract Expire {
             expireState = 1;
          }
          else if(expireState != 0) {
-             
             expire();
          }
     }
@@ -129,7 +134,9 @@ contract Expire {
     
     function expireTest() returns (bool) {
         
-        if(expireState != 2 && expireState != 0 && now - dateStart <= duration){
+        require(now <= (dateStart + duration));
+        
+        if(expireState != 2 && expireState != 0){
             
             return true;
         }
@@ -142,10 +149,7 @@ contract Expire {
     
     function expire(){
         
-        if(expireState != 2 && expireState != 0 && now - dateStart > duration){
-            
-            expireState = 2;
-        }
+        expireState = 2;
     }
     function close(){
         
@@ -157,13 +161,13 @@ contract Base is Wallet, Influence, Expire {
     
     uint id;
     string refExtern = "default";
-    mapping(string => string) categoryNames;
-    mapping(address => Base) childs;
-    mapping(address => Base) list;
-    
     string[] categoryNamesCount;
     address[] childsCount;
     address[] listCount;
+    
+    mapping(string => string) categoryNames;
+    mapping(address => Base) childs;
+    mapping(address => Base) list;
     
     function getCategoryNameDefault() returns (string) {
         
@@ -296,6 +300,8 @@ contract Bid is Base {
     
     function increase(address _artefactAddress, uint _amountIncrease) returns (bool) {
         
+        require(msg.value > increaseMax);
+        
         if(expireTest() == true) {
             
             expire();
@@ -303,17 +309,10 @@ contract Bid is Base {
             
             return false;
         }
-        if(_amountIncrease > amountMin && _amountIncrease > increaseMax){
-            
-            increaseMax = _amountIncrease;
-            winnerAddress = _artefactAddress;
-            
-            return true;
-        }
-        else {
-         
-            return false;
-        }
+        increaseMax = _amountIncrease;
+        winnerAddress = _artefactAddress;
+        
+        return true;
     }
 }
 
@@ -672,8 +671,8 @@ contract GiftCoin is Base, Coin {
         return bid;
     }
     
-    function personnBidIncrease(address personnAddress, address _codeAddress, address _artefactAddress, uint amountIncrease) public {
+    function personnBidIncrease(address personnAddress, address _bidAddress, uint amountIncrease) public {
 
-        bidIncrease(personnAddress, _codeAddress, _artefactAddress, amountIncrease);
+        bidIncrease(personnAddress, _bidAddress, amountIncrease);
     }
 }
