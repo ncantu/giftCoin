@@ -1,5 +1,32 @@
 pragma solidity ^0.4.11;
 
+library Convert {
+  
+    function bytes32ToString(bytes32 x) constant returns (string) {
+        
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
+        }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
+    }
+    
+    function stringToBytes32(string memory source) returns (bytes32 result) {
+        assembly {
+            result := mload(add(source, 32))
+        }
+    }
+}
+
 contract Owned {
     
     address masterOwner;
@@ -307,6 +334,12 @@ contract Base is Wallet, Influence, Expire {
         return string(bytesStringTrimmed);
     }
     
+    function stringToBytes32(string memory source) returns (bytes32 result) {
+        assembly {
+            result := mload(add(source, 32))
+        }
+    }
+    
     function getCategoryNameDefault() returns (string) {
         
         string index = categoryNamesCount[0];
@@ -400,11 +433,30 @@ contract Artefact is Base  {
         artefactSerialNumbers[artefactSerialNumbersCountIndex] = _artefactSerialNumber;
     }
     
+    function getArtefactSerialNumber() returns (string){
+        
+        return artefactSerialNumber;
+    }
+    
+    function getArtefactSerialNumberBytes32() returns (bytes32){
+        
+        bytes32 a = stringToBytes32(artefactSerialNumber);
+        
+        return a;
+    }
+    
+    
+    
     function setImageUrl(string _imageUrl){
         
         imageUrl = _imageUrl;
         uint imageUrlsCountIndex = imageUrls.length;
         imageUrls[imageUrlsCountIndex] = _imageUrl;
+    }
+    
+    function getImageUrl() returns (string){
+        
+        return imageUrl;
     }
 }
 
@@ -835,7 +887,7 @@ contract GiftCoin is Base, Coin {
             artefact.create(artefactAmount, _categoryName, refExtern);
             artefact.setArtefactSerialNumber(refExtern);
             artefact.setImageUrl(imageURl);
-            code.AddChild(artefact);
+            code.addChild(artefact);
             delete artefact;
             codes[codeIndex] = code;
         }
@@ -856,9 +908,16 @@ contract GiftCoin is Base, Coin {
     
     function eshopSimpleCodesAndBid(address eshopAddress, bytes32[] _artefactSerialNumbers, bytes32[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
         returns (Bid bid) {
-            
-        Code[] codes = eshopSimpleCodes(eshopAddress, _artefactSerialNumbers, _artefactAmounts, _amount, _categoryName);
-        bid = eshopSimpleBid(eshopAddress, codes, _imageURls, _dateStart, _duration, _amountMin);
+        
+        bytes32[] memory _artefactSerialNumbersReal;    
+        Code[] memory codes = eshopSimpleCodes(eshopAddress, _artefactSerialNumbers, _imageURls, _artefactAmounts, _amount, _categoryName);
+        
+        for (uint i = 0; i < _artefactSerialNumbers.length; i++) {
+         
+            Code c = codes[i];
+            _artefactSerialNumbersReal[i] = c.getArtefactSerialNumberBytes32();
+        }
+        bid = eshopSimpleBid(eshopAddress, _artefactSerialNumbersReal, _imageURls, _dateStart, _duration, _amountMin);
         
         return bid;
     }
