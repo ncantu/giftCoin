@@ -392,9 +392,9 @@ contract Artefact is Base  {
 
 contract ArtefactGroup is Base  {}
 
-contract Code is Base {}
+contract Code is Base, Artefact {}
 
-contract CodeGroup is Base {}
+contract CodeGroup is Base, AtefractGroup {}
 
 contract Bid is Base {
     
@@ -756,19 +756,18 @@ contract Org is PersonnGroup  {
 
 contract GiftCoin is Base, Coin {
     
-    
     string public standard = 'GiftCoin 0.1';
     string public name = 'Gift Coin';
     string public symbol = 'GFT';
-    uint8 public decimals = '0';
+    uint8 public decimals = 0;
     
     mapping(address => Org) public orgs;
     mapping(address => Eshop) public eshops;
     mapping(address => Personn) public personns;
     mapping(address => Award) public awards;
 
-    function createOrg()
-        public returns (Org org) {
+    function createOrg() public 
+        returns (Org org) {
         
         org = new Org();
         org.create(amount, getCategoryNameDefault(), refExtern);
@@ -777,8 +776,8 @@ contract GiftCoin is Base, Coin {
         return org;
     }
     
-    function createEshop()
-        public returns (Eshop eshop) {
+    function createEshop() public 
+        returns (Eshop eshop) {
         
         eshop = new Eshop();
         eshop.create(amount, getCategoryNameDefault(), refExtern);
@@ -787,8 +786,8 @@ contract GiftCoin is Base, Coin {
         return eshop;
     }
     
-    function createPersonn(bytes1 _personnalCountryIdCardNubmer) 
-        public returns (Personn personn) {
+    function createPersonn(bytes1 _personnalCountryIdCardNubmer) public 
+        returns (Personn personn) {
         
         personn = new Personn();
         personn.create(amount, getCategoryNameDefault(), refExtern);
@@ -804,7 +803,8 @@ contract GiftCoin is Base, Coin {
         buy(orgAddress, _amount);
     }
     
-    function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers) public returns (Award award){
+    function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers) public 
+    returns (Award award){
         
         Org org = orgs[orgAddress];
         award = org.simpleAward(_personnalCountryIdCardNubmers);
@@ -813,12 +813,48 @@ contract GiftCoin is Base, Coin {
         return award;
     }
     
+    function eshopSimpleCodes(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName) public 
+        returns (Code[] codes){
+            
+        for (uint i = 0; i < _artefactSerialNumbers.length; i++) {
+        
+            bytes1 artefactAmount = _artefactAmounts[i];
+            bytes1 refExtern = _artefactSerialNumbers[i];
+        
+            delete _artefactAmounts[i];
+            delete _artefactSerialNumbers[i];
+                
+            code = new Code();
+            code.transferOwnership(eshopAddress);
+            code.create(_amount, _categoryName, refExtern);
+            uint codeIndex = codes.length;
+            Artefact artefact = new Artefact();
+            artefact.transferOwnership(eshopAddress);
+            artefact.create(artefactAmount, _categoryName, refExtern);
+            code.AddChild(artefact);
+            delete artefact;
+            codes[codeIndex] = code;
+        }
+        return codes;
+    }
+    
     function eshopSimpleBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
         returns (Bid bid) {
         
         Eshop eshop = eshops[eshopAddress];
+        eshop.transferOwnership(eshopAddress);
         bid = eshop.simpleBid(_artefactSerialNumbers, _imageURls, _dateStart, _duration, _amountMin);
+        bid.transferOwnership(eshopAddress);
         bids[bid] = bid;
+        
+        return bid;
+    }
+    
+    function eshopSimpleCodesAndBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _artefactAmounts, uint _amount, string _categoryName, uint[] _dateStart, uint[] _duration, uint[] _amountMin) public 
+        returns (Bid bid) {
+            
+        Code[] codes = eshopSimpleCodes(eshopAddress, _artefactSerialNumbers, _artefactAmounts, _amount, _categoryName);
+        bid = eshopSimpleBid(eshopAddress, codes, _imageURls, _dateStart, _duration, _amountMin);
         
         return bid;
     }
