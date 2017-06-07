@@ -566,22 +566,69 @@ contract Org is PersonnGroup  {
 }
 
 contract GiftCoin is Base {
+    
+    mapping(address => Org) public orgs;
+    mapping(address => Eshop) public eshops;
+    mapping(address => Personn) public personns;
 
     function createOrg(uint _amount, string _categoryName, string _refExtern)
-        returns (Org org) {
+        public returns (Org org) {
         
         org = new Org();
         org.create(_amount, _categoryName, _refExtern);
+        orgs[org] = org;
         
         return org;
     }
     
     function createEshop(uint _amount, string _categoryName, string _refExtern)
-        returns (Eshop eshop) {
+        public returns (Eshop eshop) {
         
         eshop = new Eshop();
         eshop.create(_amount, _categoryName, _refExtern);
+        eshops[eshop] = eshop;
         
         return eshop;
+    }
+    
+    function createPersonn(bytes1 _personnalCountryIdCardNubmer, uint _amount, string _categoryName, string _refExtern) 
+        public returns (Personn personn) {
+        
+        personn = new Personn();
+        personn.create(_amount, _categoryName, _refExtern);
+        personn.setPersonnalCountryIdCardNubmer(_personnalCountryIdCardNubmer);
+        personn.transferOwnership(personn);
+        personns[personn] = personn;
+        
+        return personn;
+    }
+    
+    function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers, uint _amount, string _categoryName, string _refExtern) public returns (Award award){
+        
+        Org org = orgs[orgAddress];
+        award = org.simpleAward(_personnalCountryIdCardNubmers, _amount, _categoryName, _refExtern);
+        
+        return award;
+    }
+    
+    function eshopSimpleBid(address eshopAddress, bytes1[] _artefactSerialNumbers, bytes1[] _imageURls, uint[] _dateStart, uint[] _duration, uint[] _amountMin, uint _amount, string _categoryName, string _refExtern) public 
+        returns (Bid bid) {
+        
+        Eshop eshop = eshops[eshopAddress];
+        bid = eshop.simpleBid(_artefactSerialNumbers, _imageURls, _dateStart, _duration, _amountMin, _amount, _categoryName, _refExtern);
+        
+        return bid;
+    }
+    
+    function personnBidIncrease(address personnAddress, address _codeAddress, address _artefactAddress, uint amountIncrease) public {
+        
+        Personn personn = personns[personnAddress];
+        personn.bidIncrease(_codeAddress, _artefactAddress, amountIncrease);
+    }
+    
+    function personnBuy(address personnAddress, uint _amount) public {
+        
+        Personn personn = personns[personnAddress];
+        personn.buy(_amount);
     }
 }
