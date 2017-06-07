@@ -410,9 +410,9 @@ contract Artefact is Base  {
 
 contract ArtefactGroup is Base  {}
 
-contract Code is Base, Artefact {}
+contract Code is Artefact {}
 
-contract CodeGroup is Base, ArtefactGroup {}
+contract CodeGroup is ArtefactGroup {}
 
 contract Bid is Base {
     
