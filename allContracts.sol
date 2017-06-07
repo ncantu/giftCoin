@@ -5,7 +5,6 @@ contract Owned {
     address public masterOwner;
     address public owner;
     address  public winnerAddress;
-    uint public amount = 0;
 
     function owned() {
         owner = msg.sender;
@@ -18,7 +17,6 @@ contract Owned {
 
     function transferOwnership(address newOwner) onlyOwner {
         owner = newOwner;
-        owner.transfer(amount);
     }
     
     function initWinner(){
@@ -28,22 +26,31 @@ contract Owned {
 
     function transferOwnershipToWinner() {
         owner = winnerAddress;
-        owner.transfer(amount);
     }
 }
 
 contract Wallet is Owned{
 
-    uint unitTotalArtefactSell;
-    uint unitTotalArtefactBuy;
+    uint unitTotalArtefactSell = 0;
+    uint unitTotalArtefactBuy = 0;
     
-    uint amountTotalArtefactSell;
-    uint amountTotalArtefactBuy;
+    uint amountTotalArtefactSell = 0;
+    uint amountTotalArtefactBuy = 0;
     
-    uint amountTotalCoinSell;
-    uint amountTotalCoinBuy;
+    uint amountTotalCoinSell = 0;
+    uint amountTotalCoinBuy = 0;
     
-    uint amount;
+    uint amount = 0;
+    
+    function transferOwnership(address newOwner) onlyOwner {
+        owner = newOwner;
+        owner.transfer(amount);
+    }
+    
+    function transferOwnershipToWinner() {
+        owner = winnerAddress;
+        owner.transfer(amount);
+    }
 }
 
 contract Influence  {
@@ -545,10 +552,8 @@ contract Org is PersonnGroup  {
     }
 }
 
-contract GiftCoin is Base{
-    
+contract GiftCoin is Base {
 
-    
     function createOrg(uint _amount, string _categoryName, string _refExtern)
         returns (Org org) {
         
