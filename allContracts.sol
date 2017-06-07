@@ -4,7 +4,7 @@ contract Owned {
     
     address public masterOwner;
     address public owner;
-    address  public winnerAddress;
+    address public winnerAddress;
 
     function owned() {
         owner = msg.sender;
@@ -31,16 +31,16 @@ contract Owned {
 
 contract Wallet is Owned{
 
-    uint unitTotalArtefactSell = 0;
-    uint unitTotalArtefactBuy = 0;
+    uint public unitTotalArtefactSell = 0;
+    uint public unitTotalArtefactBuy = 0;
     
-    uint amountTotalArtefactSell = 0;
-    uint amountTotalArtefactBuy = 0;
+    uint public amountTotalArtefactSell = 0;
+    uint public amountTotalArtefactBuy = 0;
     
-    uint amountTotalCoinSell = 0;
-    uint amountTotalCoinBuy = 0;
+    uint public amountTotalCoinSell = 0;
+    uint public amountTotalCoinBuy = 0;
     
-    uint amount = 0;
+    uint public amount = 0;
     
     function transferOwnership(address newOwner) onlyOwner {
         owner = newOwner;
@@ -61,10 +61,10 @@ contract Influence  {
 
 contract Expire {
     
-    uint expireState; // 0:closed 1:running 2:expired
-    uint dateStart;
-    uint duration;
-    uint amountMin;
+    uint public expireState = 0; // 0:closed 1:running 2:expired
+    uint public dateStart = 0;
+    uint public duration = 0;
+    uint public amountMin = 0;
     
     function setDateStart(uint _dateStart){
         
