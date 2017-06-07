@@ -234,7 +234,7 @@ contract Expire {
         duration = _duration;
     }
     
-    function getExpireState() return (uint) {
+    function getExpireState() returns (uint) {
         
         return expireState;
     }
