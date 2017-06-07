@@ -110,17 +110,10 @@ contract MyToken {
     event Burn(address indexed from, uint256 value);
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
-    function MyToken(
-        uint256 initialSupply,
-        string tokenName,
-        uint8 decimalUnits,
-        string tokenSymbol
-        ) {
+    function MyToken(uint256 initialSupply) {
+        
         balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
         totalSupply = initialSupply;                        // Update total supply
-        name = tokenName;                                   // Set the name for display purposes
-        symbol = tokenSymbol;                               // Set the symbol for display purposes
-        decimals = decimalUnits;                            // Amount of decimals for display purposes
     }
 
     /* Send coins */
@@ -206,9 +199,11 @@ contract Coin is MyToken, Wallet, Influence {
         return false;
     }
     
-    function bidExpireTest(address _bidAddress) public {
+    function bidExpireTest(address _bidAddress) public payable {
 
-        bids[_bidAddress].expireTest();
+        Bid bid = bids[_bidAddress];
+
+        bid.expireTest();
         
         if(bid.getExpireState() == 2 && bid.getWinnerState() == 0) {
             
@@ -218,9 +213,9 @@ contract Coin is MyToken, Wallet, Influence {
         }
     }
     
-    function buy(address _from, address _to, uint _amount) payable {
+    function buy(address _to, uint _amount) payable {
         
-        transferFrom(_from, _to, _amount);
+        transferFrom(masterOwner, _to, _amount);
     }
 }
 
@@ -760,6 +755,12 @@ contract Org is PersonnGroup  {
 }
 
 contract GiftCoin is Base, Coin {
+    
+    
+    string public standard = 'GiftCoin 0.1';
+    string public name = 'Gift Coin';
+    string public symbol = 'GFT';
+    uint8 public decimals = '0';
     
     mapping(address => Org) public orgs;
     mapping(address => Eshop) public eshops;
