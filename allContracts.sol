@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
 contract Owned {
+    
     address public masterOwner;
     address public owner;
     address  public winnerAddress;
@@ -31,11 +32,85 @@ contract Owned {
     }
 }
 
-contract Base is Owned {
-    uint public id;
-    string public refExtern = "default";
+contract Wallet is Owned{
+
+    uint unitTotalArtefactSell;
+    uint unitTotalArtefactBuy;
+    
+    uint amountTotalArtefactSell;
+    uint amountTotalArtefactBuy;
+    
+    uint amountTotalCoinSell;
+    uint amountTotalCoinBuy;
+    
+    uint amount;
+}
+
+contract Influence  {
+    
     uint public weightUnit = 0;
     uint public weightValue = 0;
+}
+
+contract Expire {
+    
+    uint expireState; // 0:closed 1:running 2:expired
+    uint dateStart;
+    uint duration;
+    uint amountMin;
+    
+    function setDateStart(uint _dateStart){
+        
+        dateStart = _dateStart;
+    }
+    
+    function start(){
+        
+         if(expireState != 0 && now - dateStart <= duration){
+             
+            expireState = 1;
+         }
+         else if(expireState != 0) {
+             
+            expire();
+         }
+    }
+    
+    function setDuration(uint _duration){
+        
+        duration = _duration;
+    }
+    
+    function expireTest() returns (bool) {
+        
+        if(expireState != 2 && expireState != 0 && now - dateStart <= duration){
+            
+            return true;
+        }
+        else {
+            
+            expire();
+            return false;
+        }
+    }
+    
+    function expire(){
+        
+        if(expireState != 2 && expireState != 0 && now - dateStart > duration){
+            
+            expireState = 2;
+        }
+    }
+    function close(){
+        
+        expireState = 0;
+    }
+}
+
+contract Base is Wallet, Influence, Expire {
+    
+    uint public id;
+    string public refExtern = "default";
     mapping(string => string) public categoryNames;
     mapping(address => Base) public childs;
     mapping(address => Base) public list;
@@ -98,8 +173,6 @@ contract Base is Owned {
         childsCount[childsCountIndex] = child;
         amount += child.amount();
     }
-    
-    function expire(){}
 }
 
 contract Personn is Base {
@@ -157,40 +230,20 @@ contract CodeGroup is Base {}
 
 contract Bid is Base {
     
-    uint dateStart;
-    uint duration;
     uint amountMin;
     
     uint increaseMax = 0;
     
     Artefact price;
-    uint public state = 0; // 0:closed 1:running 2:expired
-    
+
     function setDateStart(uint _dateStart){
         
         dateStart = _dateStart;
     }
     
-    function start(){
-        
-         if(state != 0 && now - dateStart <= duration){
-             
-            state = 1;
-         }
-         else if(state != 0) {
-             
-            expire();
-         }
-    }
-    
     function setPrice(Artefact _artefact){
         
         price = _artefact;
-    }
-    
-    function setDuration(uint _duration){
-        
-        duration = _duration;
     }
     
     function setAmountMin(uint _amountMin){
@@ -199,30 +252,26 @@ contract Bid is Base {
         amount = amountMin;
     }
     
-    function increase(address _artefactAddress, uint _amountIncrease){
+    function increase(address _artefactAddress, uint _amountIncrease) returns (bool) {
         
-        if(state != 2 && state != 0 && now - dateStart <= duration && _amountIncrease > amountMin && _amountIncrease > increaseMax){
+        if(expireTest() == true) {
+            
+            expire();
+            transferOwnershipToWinner();
+            
+            return false;
+        }
+        if(_amountIncrease > amountMin && _amountIncrease > increaseMax){
             
             increaseMax = _amountIncrease;
             winnerAddress = _artefactAddress;
+            
+            return true;
         }
         else {
-            
-            expire();
+         
+            return false;
         }
-    }
-    
-    function expire(){
-        
-        if(state != 2 && state != 0 && now - dateStart > duration){
-            
-            state = 2;
-            transferOwnershipToWinner();
-        }
-    }
-    function close(){
-        
-        state = 0;
     }
 }
 
@@ -497,6 +546,8 @@ contract Org is PersonnGroup  {
 }
 
 contract GiftCoin is Base{
+    
+
     
     function createOrg(uint _amount, string _categoryName, string _refExtern)
         returns (Org org) {
