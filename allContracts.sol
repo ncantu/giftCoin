@@ -396,7 +396,7 @@ contract Bid is Base {
     
     function getWinnerIncrease() returns (uint) {
         
-        require(expirestate != 2 && expirestate != 0); 
+        require(expireState != 2 && expireState != 0); 
         
         return increaseMax;
     }
