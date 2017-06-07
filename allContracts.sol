@@ -85,7 +85,7 @@ contract Influence  {
 
 contract Coin is Wallet, Influence {
     
-    function getRate() returns (uint) public {
+    function getRate() public returns (uint) {
         
         weightValueTotal = amountTotalArtefactSell;
         weightValue = amountTotalCoinBuy;
