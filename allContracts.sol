@@ -77,6 +77,19 @@ contract Influence  {
     }
 }
 
+contract Coin is Base, Wallet, Influence {
+    
+    function bidIncrease(address from, address _codeAddress, address _artefactAddress, uint amountIncrease) {
+        
+        
+    }
+    
+    function buy(address from, address to, uint _amount) {
+        
+        
+    }
+}
+
 contract Expire {
     
     uint expireState = 0; // 0:closed 1:running 2:expired
@@ -217,15 +230,6 @@ contract Personn is Base {
         personnalCountryIdCardNubmer = _personnalCountryIdCardNubmer;
         uint personnalCountryIdCardNubmersCountIndex = personnalCountryIdCardNubmers.length;
         personnalCountryIdCardNubmers[personnalCountryIdCardNubmersCountIndex] = _personnalCountryIdCardNubmer;
-    }
-    
-    function bidIncrease(address _codeAddress, address _artefactAddress, uint amountIncrease) {
-        
-        
-    }
-    
-    function buy(uint _amount) {
-        
     }
 }
 
@@ -600,7 +604,7 @@ contract Org is PersonnGroup  {
     }
 }
 
-contract GiftCoin is Base {
+contract GiftCoin is Base, Coin {
     
     mapping(address => Org) public orgs;
     mapping(address => Eshop) public eshops;
@@ -640,8 +644,7 @@ contract GiftCoin is Base {
     
     function orgBuy(address orgAddress, uint _amount) public {
         
-        Org org = orgs[orgAddress];
-        org.buy(_amount);
+        buy(orgAddress, _amount);
     }
     
     function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers) public returns (Award award){
@@ -662,8 +665,7 @@ contract GiftCoin is Base {
     }
     
     function personnBidIncrease(address personnAddress, address _codeAddress, address _artefactAddress, uint amountIncrease) public {
-        
-        Personn personn = personns[personnAddress];
-        personn.bidIncrease(_codeAddress, _artefactAddress, amountIncrease);
+
+        bidIncrease(personnAddress, _codeAddress, _artefactAddress, amountIncrease);
     }
 }
