@@ -553,24 +553,6 @@ contract Eshop is PersonnGroup  {
         return artefactGroup;
     }
     
-    function createCode() 
-        returns (Code code) {
-        
-        code = new Code();
-        code.create(amount, getCategoryNameDefault(), refExtern);
-        
-        return code;
-    }
-    
-    function createCodeGroup()  
-        returns (CodeGroup codeGroup) {
-        
-        codeGroup = new CodeGroup();
-        codeGroup.create(amount, getCategoryNameDefault(), refExtern);
-        
-        return codeGroup;
-    }
-    
     function createBid(uint _dateStart, uint _duration, uint _amountMin) 
         returns (Bid bid) {
         
@@ -820,9 +802,11 @@ contract GiftCoin is Base, Coin {
         
             bytes1 artefactAmount = _artefactAmounts[i];
             bytes1 refExtern = _artefactSerialNumbers[i];
+            bytes1 imageURl = _imageURls[i];
         
             delete _artefactAmounts[i];
             delete _artefactSerialNumbers[i];
+            delete _imageURls[i];
                 
             code = new Code();
             code.transferOwnership(eshopAddress);
@@ -831,6 +815,8 @@ contract GiftCoin is Base, Coin {
             Artefact artefact = new Artefact();
             artefact.transferOwnership(eshopAddress);
             artefact.create(artefactAmount, _categoryName, refExtern);
+            artefact.setArtefactSerialNumber(refExtern){
+            artefact.setImageUrl(imageURl);
             code.AddChild(artefact);
             delete artefact;
             codes[codeIndex] = code;
