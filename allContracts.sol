@@ -603,6 +603,12 @@ contract GiftCoin is Base {
         return personn;
     }
     
+    function orgBuy(address orgAddress, uint _amount) public {
+        
+        Org org = orgs[orgAddress];
+        org.buy(_amount);
+    }
+    
     function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers, uint _amount, string _categoryName, string _refExtern) public returns (Award award){
         
         Org org = orgs[orgAddress];
@@ -624,11 +630,5 @@ contract GiftCoin is Base {
         
         Personn personn = personns[personnAddress];
         personn.bidIncrease(_codeAddress, _artefactAddress, amountIncrease);
-    }
-    
-    function personnBuy(address personnAddress, uint _amount) public {
-        
-        Personn personn = personns[personnAddress];
-        personn.buy(_amount);
     }
 }
