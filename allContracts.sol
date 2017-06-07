@@ -812,6 +812,16 @@ contract GiftCoin is Base, Coin {
     string public symbol = 'GFT';
     uint8 public decimals = 0;
     
+    uint buyAmountOrgRatio = 100;
+    uint buyAmountOrgsRatio = 10;
+    uint buyAmountEshopsRatio = 20;
+    uint buyAmountContribsRatio = 5;
+    
+    uint winBidAmountOrgRatio = 100;
+    uint winBidAmountOrgsRatio = 20;
+    uint winBidAmountEshopsRatio = 10;
+    uint winBidAmountContribsRatio = 5;
+    
     mapping(address => Org) public orgs;
     mapping(address => Eshop) public eshops;
     mapping(address => Personn) public personns;
@@ -851,7 +861,15 @@ contract GiftCoin is Base, Coin {
     
     function orgBuy(address orgAddress, uint _amount) public  payable {
         
-        buy(orgAddress, _amount);
+        uint amountorgs = _amount * buyAmountOrgsRatio / 100;
+        uint amountEshops = _amount * buyAmountEshopsRatio / 100;
+        uint amountContribs = _amount * buyAmountContribsRatio / 100;
+        uint amountOrg = (_amount * buyAmountOrgRatio / 100) + amountEshops + amountContribs;
+        
+        buy(orgAddress, amountOrg);
+        // orgs buy(orgAddress, amountEshops);
+        // eshops buy(orgAddress, amountEshops);
+        // contribs buy(orgAddress, amountContribs);
     }
     
     function orgSimpleAward(address orgAddress, bytes32[] _personnalCountryIdCardNubmers) public 
@@ -922,7 +940,12 @@ contract GiftCoin is Base, Coin {
     }
     
     function personnBidIncrease(address _from, address _bidAddress, uint amountIncrease) public payable {
-
+        
+        // uint winBidAmountOrgRatio = 100;
+        // uint winBidAmountOrgsRatio = 20;
+        // uint winBidAmountEshopsRatio = 10;
+        // uint winBidAmountContribsRatio = 5;
+        
         bidIncrease(_from, _bidAddress, amountIncrease);
     }
 }
