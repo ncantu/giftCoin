@@ -669,9 +669,8 @@ contract Eshop is PersonnGroup  {
             
         ArtefactGroup artefactGroup = createArtefactGroup();
         BidGroup bidGroup = createBidGroup();
-        uint artefactSerialNumbersLength = _artefactSerialNumbers.length;
         
-        for (uint i = 0; i < artefactSerialNumbersLength; i++) {
+        for (uint i = 0; i < _artefactSerialNumbers.length; i++) {
              
             string memory artefactSerialNumber = bytes32ToString(_artefactSerialNumbers[i]);
             string memory imageUrl = bytes32ToString(_imageUrls[i]);
