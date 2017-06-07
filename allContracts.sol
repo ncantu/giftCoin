@@ -801,7 +801,7 @@ contract GiftCoin is Base, Coin {
     
     function orgBuy(address orgAddress, uint _amount) public {
         
-        // buy(orgAddress, _amount);
+        buy(orgAddress, _amount);
     }
     
     function orgSimpleAward(address orgAddress, bytes1[] _personnalCountryIdCardNubmers) public returns (Award award){
