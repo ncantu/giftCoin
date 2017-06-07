@@ -199,7 +199,23 @@ contract Coin is MyToken, Wallet, Influence {
         Bid bid = bids[_bidAddress];
         bool res = bid.increase(_from, amountIncrease);
         
+        if(res == true && bid.getExpireState() == 2) {
+            
+            transferFrom(bid.getWinnerAddress(), bid.getOwner(), bid.getWinnerIncrease());
+        }
         return false;
+    }
+    
+    function bidExpireTest(address _bidAddress) public {
+
+        bids[_bidAddress].expireTest();
+        
+        if(bid.getExpireState() == 2 && bid.getWinnerState() == 0) {
+            
+            transferFrom(bid.getWinnerAddress(), bid.getOwner(), bid.getWinnerIncrease());
+            
+            bid.setWinnerState(1);
+        }
     }
     
     function buy(address _from, address _to, uint _amount) payable {
@@ -385,13 +401,26 @@ contract Code is Base {}
 
 contract CodeGroup is Base {}
 
-contract Bid is Base, MyToken {
+contract Bid is Base {
     
     uint amountMin;
     uint increaseMax = 0;
     Artefact price;
+    uint winnerState = 0; // 0:not awarded 1:awarded
+    
+    function getWinnerState() returns (uint) {
+        
+        return winnerState;
+    }
+    
+    function setWinnerState(uint _state) {
+        
+        winnerState = _state;
+    }
     
     function getWinnerAddress() returns (address) {
+        
+        require(expireState != 2 && expireState != 0); 
         
         return winnerAddress;
     }
@@ -424,7 +453,6 @@ contract Bid is Base, MyToken {
         if(expireTest() == true) {
             
             expire();
-            transferFrom(getWinnerAddress(), getOwner(), getWinnerIncrease());
             return true;
         }
         require(_amountIncrease > increaseMax);
@@ -789,15 +817,9 @@ contract GiftCoin is Base, Coin {
         
         Eshop eshop = eshops[eshopAddress];
         bid = eshop.simpleBid(_artefactSerialNumbers, _imageURls, _dateStart, _duration, _amountMin);
-        
         bids[bid] = bid;
         
         return bid;
-    }
-    
-    function bidExpireTest(address _bidAddress) public {
-
-        bids[_bidAddress].expireTest();
     }
     
     function personnBidIncrease(address _from, address _bidAddress, uint amountIncrease) public {
