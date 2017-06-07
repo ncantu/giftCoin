@@ -54,9 +54,22 @@ contract Wallet is Owned{
 }
 
 contract Influence  {
+
+    uint public weightUnitTotal = 0;
+    uint public weightValueTotal = 0;
     
     uint public weightUnit = 0;
     uint public weightValue = 0;
+    
+    function getWeightUnit() returns (uint) {
+        
+       return weightUnit / weightValueTotal;
+    }
+    
+    function getWeightValue() returns (uint) {
+       
+       return weightValue / weightValueTotal; 
+    }
 }
 
 contract Expire {
