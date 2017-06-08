@@ -277,12 +277,6 @@ contract Bid is Base {
     uint winAmountEshopsRatio = 10;
     uint winAmountContribsRatio = 5;
 
-    function transferOwnership(address newOwner) onlyOwner {
-
-        owner = newOwner;
-        owner.transfer(amount);
-    }
-
     function transferOwnershipToWinner() {
 
         owner = winnerAddress;
