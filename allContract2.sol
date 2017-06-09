@@ -446,12 +446,22 @@ contract Coin is MyToken, Wallet, Influence {
         uint artefactAmountTotal = 0;
         uint coinAmountTotal = 0;
         uint ratio = 0;
+        bool ratioPositiv = true;
         address[] addressList;
         mapping(address => uint) addressArtefactAmountTotalMap;
         mapping(address => uint) addressCoinAmountTotalMap;
     }
     uint[] memberIds;
     mapping(uint => Member) nameMemberMap;
+
+    struct Cost {
+
+      mapping(address => uint) positifs;
+      mapping(address => uint) negatifs;
+
+      address[] positifsAddress;
+      address[] negatifsAddress;
+    }
 
     struct TransfertInfo {
         uint id;
@@ -460,38 +470,54 @@ contract Coin is MyToken, Wallet, Influence {
         uint amountEuro;
         uint amountTotal;
         string state;
-        mapping(address => uint) cost;
-        address[] costAddress;
+        Cost cost;
     }
     uint[] transfertInfoIds;
     mapping(uint => TransfertInfo) transfertInfoMap;
 
-    uint artefactAmountTotalGlobal = 5;
-    uint coinAmountTotalGlobal = 1;
+    uint artefactAmountTotalGlobal = 500000;
+    uint coinAmountTotalGlobal = 100000;
     uint rateMin = (1 / 5);
 
     uint ownersRatio = 0;
     uint creatorsRatio = 10;
+    uint burnersRatio = 20;
     uint valorizatorsRatio = 1;
     uint operatorsRatio = 3;
+    uint bidWinnersRatio = 1;
+    uint bidLooserssRatio = 2;
+
+    bool ownersRatioPositiv = true;
+    bool creatorsRatioPositiv = true;
+    bool burnersRatioPositiv = false;
+    bool valorizatorsRatioPositiv = true;
+    bool operatorsRatioPositiv = true;
+    bool bidWinnersRatioPositiv = true;
+    bool bidLooserssRatioPositiv = false;
 
     string ownersName = 'owners';
     string creatorsName = 'creators';
+    string burnersName = 'burners';
     string valorizatorsName = 'valorizators';
     string operatorsName = 'operators';
+    string bidWinnersName = 'bidWinners';
+    string bidLoosersName = 'bidLoosers';
 
     function createMembers(){
 
-        createMember(ownersName, ownersRatio);
-        createMember(creatorsName, creatorsRatio);
-        createMember(valorizatorsName, valorizatorsRatio);
-        createMember(operatorsName, operatorsRatio);
+        createMember(ownersName, ownersRatio, ownersRatioPositiv);
+        createMember(burnersName, creatorsRatio, creatorsRatioPositiv);
+        createMember(creatorsName, burnersRatio, burnersRatioPositiv);
+        createMember(valorizatorsName, valorizatorsRatio, valorizatorsRatioPositiv);
+        createMember(operatorsName, operatorsRatio, operatorsRatioPositiv);
+        createMember(bidWinnersName, bidWinnersRatio, bidWinnersRatioPositiv);
+        createMember(bidLoosersName, bidLooserssRatio, bidLooserssRatioPositiv);
     }
 
-    function createMember(string _memberName, _distributeRatio){
+    function createMember(string _memberName, _distributeRatio, bool _ratioPositiv){
 
         uint membersIndex = memberIds.length;
-        Member member = new Member({name: _memberName, distributeRatio: _distributeRatio, id: membersIndex});
+        Member member = new Member({name: _memberName, distributeRatio: _distributeRatio, id: membersIndex: ratioPositiv: _ratioPositiv});
         memberIds[membersIndex] = membersIndex;
     }
 
@@ -536,7 +562,18 @@ contract Coin is MyToken, Wallet, Influence {
 
                     nameMemberMap[i].addressCoinAmountTotalMap[a] = _amount;
 
-                    transfertInfoMap[transfertInfoId].cost[a] = cost;
+                    if(nameMemberMap[i].ratioPositiv == true){
+
+                      transfertInfoMap[transfertInfoId].cost.positifs[a] = cost;
+                      uint costIndex = transfertInfoMap[transfertInfoId].cost.negatifsAddress.length();
+                      transfertInfoMap[transfertInfoId].cost.positifsAddress[costIndex] = a;
+                    }
+                    else {
+
+                      transfertInfoMap[transfertInfoId].cost.negatifs[a] = cost;
+                      uint costIndex = transfertInfoMap[transfertInfoId].cost.negatifsAddress.length();
+                      transfertInfoMap[transfertInfoId].cost.negatifsAddress[costIndex] = a;
+                    }
                 }
             }
         }
@@ -553,14 +590,22 @@ contract Coin is MyToken, Wallet, Influence {
 
       transfertInfoMap[transfertInfoId].state = 'validated';
 
-      transferFrom(masterOwner, a, transfertInfoMap[transfertInfoId].amount);
+      transferFrom(masterOwner,  transfertInfoMap[transfertInfoId].a, transfertInfoMap[transfertInfoId].amount);
 
-      for (uint i = 0; i < transfertInfoMap[transfertInfoId].costAddress.length; i++) {
+      for (uint i = 0; i < nameMemberMap[i].cost.positifsAddress.length; i++) {
 
-        uint aCost = transfertInfoMap[transfertInfoId].costAddress[i];
-        uint amountCost = transfertInfoMap[transfertInfoId].cost[aCost];
+          aCost = nameMemberMap[i].cost.positifsAddress;
+          amountCost = nameMemberMap[i].cost.positifs[aCost];
 
-        transferFrom(masterOwner, aCost, amountCost);
+          transferFrom(masterOwner, aCost, amountCost);
+      }
+
+      for (uint i = 0; i < nameMemberMap[o].cost.negatifsAddress.length; i++) {
+
+          aCost = nameMemberMap[i].cost.negatifsAddress;
+          amountCost = nameMemberMap[i].cost.negatifs[aCost];
+
+          transferFrom(aCost, masterOwner, amountCost);
       }
       return transfertInfoMap[transfertInfoId].amountEuro;
     }
@@ -620,11 +665,14 @@ contract GiftCoin is Base, Coin {
 
     uint ownersRatio = 0;
     uint creatorsRatio = 10;
+    uint burnersRatio = 20;
     uint valorizatorsRatio = 1;
     uint operatorsRatio = 3;
+    uint bidWinnersRatio = 1;
+    uint bidLooserssRatio = 2;
 
-    uint artefactAmountTotalGlobal = 5;
-    uint coinAmountTotalGlobal = 1;
+    uint artefactAmountTotalGlobal = 500000;
+    uint coinAmountTotalGlobal = 100000;
     uint rateMin = (1 / 5);
 
     mapping(address => Personn) public personns;
