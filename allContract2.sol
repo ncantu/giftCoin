@@ -1,31 +1,162 @@
 pragma solidity ^0.4.11;
 
-library Convert {
+library DataAccess {
 
-    function bytes32ToString(bytes32 x) constant returns (string) {
 
-        bytes memory bytesString = new bytes(32);
-        uint charCount = 0;
-        for (uint j = 0; j < 32; j++) {
-            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
-            if (char != 0) {
-                bytesString[charCount] = char;
-                charCount++;
-            }
-        }
-        bytes memory bytesStringTrimmed = new bytes(charCount);
-        for (j = 0; j < charCount; j++) {
-            bytesStringTrimmed[j] = bytesString[j];
-        }
-        return string(bytesStringTrimmed);
-    }
 
-    function stringToBytes32(string memory source) returns (bytes32 result) {
-        assembly {
-            result := mload(add(source, 32))
-        }
-    }
+  function arrayUintAdd(uint[] _array, uint _data) returns (_array, uint arrayIndex){
+
+    arrayIndex = _array.length;
+    _array[arrayIndex] = _data;
+  }
+
+  function arrayStringAdd(bytes32[] _array, string _data) returns (_array, uint arrayIndex){
+
+    arrayIndex = _array.length;
+    _array[arrayIndex] = DataAcccess.bytes32ToString(_data);
+  }
+
+  function mapAddressBaseGet(address[] _array, uint arrayIndex, mapping (address => Base) _map) returns (Base){
+
+    address ref = _array[arrayIndex];
+    return _map[ref];
+  }
+
+  function mapAddressBaseSet(address[] _array, address _index, Base _item, mapping (address => Base) _map) returns (_map, _array, uint arrayIndex){
+
+    (_array, arrayIndex) = DataAccess.arrayAddessAdd( _array, _index);
+
+    _map[_index] = _item;
+  }
+
+  function mapAddressUitGet(address[] _array, uint arrayIndex, mapping (address => uint) _map) returns (uint){
+
+    address ref = _array[arrayIndex];
+    return _map[ref];
+  }
+
+  function mapAddressUitSet(address[] _array, address _index, uint _item, mapping (address => uint) _map) returns (_map, _array, uint arrayIndex){
+
+    (_array, arrayIndex) = DataAccess.arrayAddessAdd( _array, _index);
+
+    _map[_index] = _item;
+  }
 }
+
+contract MapStringString {
+
+  bytes32[] count;
+  mapping(string => string) map;
+
+  function bytes32ToString(bytes32 x) constant returns (string) {
+
+      bytes memory bytesString = new bytes(32);
+      uint charCount = 0;
+      for (uint j = 0; j < 32; j++) {
+          byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+          if (char != 0) {
+              bytesString[charCount] = char;
+              charCount++;
+          }
+      }
+      bytes memory bytesStringTrimmed = new bytes(charCount);
+      for (j = 0; j < charCount; j++) {
+          bytesStringTrimmed[j] = bytesString[j];
+      }
+      return string(bytesStringTrimmed);
+  }
+
+  function stringToBytes32(string memory source) returns (bytes32 result) {
+      assembly {
+          result := mload(add(source, 32))
+      }
+  }
+
+  function arrayStringAdd(bytes32[] _array, string _data) returns (_array, uint arrayIndex){
+
+    arrayIndex = _array.length;
+    _array[arrayIndex] = DataAcccess.bytes32ToString(_data);
+  }
+
+  function set(string _index, string _item) returns (uint arrayIndex){
+
+    arrayIndex = arrayStringAdd(_index);
+
+    map[_index] = _item;
+  }
+
+  function get(uint arrayIndex) returns (string){
+
+      string ref = count[arrayIndex];
+      return map[ref];
+  }
+
+  function getFromIndex(string _index) returns (string){
+
+    return map[_index];
+  }
+}
+
+contract MapAddressBase {
+
+  address[] count;
+  mapping(address => Base) map;
+
+  function arrayAddessAdd(address _data) returns (uint arrayIndex){
+
+    arrayIndex = _array.length;
+    count[arrayIndex] = _data;
+  }
+
+  function set(address _index, Base _item) returns (uint arrayIndex){
+
+    arrayIndex = arrayAddressAdd(_index);
+
+    map[_index] = _item;
+  }
+
+  function get(uint arrayIndex) returns (Base){
+
+    address ref = count[arrayIndex];
+    return map[ref];
+  }
+
+  function getFromIndex(address _index) returns (Base){
+
+    return map[_index];
+  }
+}
+
+contract MapAddressUint {
+
+  address[] count;
+  mapping(address => uint) map;
+
+  function arrayAddessAdd(address _data) returns (uint arrayIndex){
+
+    arrayIndex = _array.length;
+    count[arrayIndex] = _data;
+  }
+
+  function set(address _index, uint _item) returns (uint arrayIndex){
+
+    arrayIndex = arrayAddessAdd(_index);
+
+    map[_index] = _item;
+  }
+
+  function get(uint arrayIndex) returns (uint){
+
+    address ref = count[arrayIndex];
+    return map[ref];
+  }
+
+  function getFromIndex(address _index) returns (uint){
+
+    return map[_index];
+  }
+}
+
 
 contract Owned {
 
@@ -76,268 +207,166 @@ contract Influence  {
 
 contract Expire {
 
-    uint expireState = 0; // 0:closed 1:running 2:expired
-    uint dateStart = 0;
-    uint duration = 0;
-    uint amountMin = 0;
+    uint expireState = 0; // 0:created 1:running 2:expired 3:closed
+    uint expireDateStart = 0;
+    uint expireDuration = 0;
+    uint renewOffSet = 0;
 
-    function setDateStart(uint _dateStart){
+    function expireCreate(uint _expireDateStart, uint _expireDuration, uint _renewOffSet){
 
-        dateStart = _dateStart;
+        expireDateStart = _expireDateStart;
+        expireDuration = _expireDuration;
+        renewOffSet = _renewOffSet;
     }
 
-    function start(){
+    function expireSetDateStart() returns (uint){
 
-         if(expireState != 0 && now - dateStart <= duration){
+        return (expireState + expireDuration)
+    }
+
+    function expireGetDateEnd() returns (uint){
+
+        return (expireState + expireDuration)
+    }
+
+    function expireTestRenew() {
+
+        expireState = 2;
+
+        if(now > (renewOffSet + expireGetDateEnd())) {
+
+            expireDateStart = now;
+            expireState = 1;
+        }
+    }
+
+    function expireTest() returns (expireState) {
+
+        if(expireState == 0 && expireDateStart != 0 && now > expireDateStart && now < expireGetDateEnd()) {
 
             expireState = 1;
-         }
-         else if(expireState != 0) {
-            expire();
-         }
-    }
+        }
+        if(expireState == 0 && expireDateStart != 0 now > expireDateStart && now > expireGetDateEnd()) {
 
-    function setDuration(uint _duration){
+            expireTestRenew();
+        }
+        if(expireState == 1 && now > expireGetDateEnd()) {
 
-        duration = _duration;
-    }
+            expireTestRenew();
+        }
+        if(expireState == 2) {
 
-    function getExpireState() returns (uint) {
-
+            expireTestRenew();
+        }
         return expireState;
     }
 
-    function expireTest() returns (bool) {
+    function expireClose() {
 
-        require(now <= (dateStart + duration));
+        expireState = 3;
+    }
+}
 
-        if(expireState != 2 && expireState != 0){
+contract Bid is Expire {
 
-            return true;
-        }
-        else {
+    MapAddressUint bidders;
 
-            expire();
-            return false;
-        }
+    uint amountMin = 0;
+    uint amountMax = 0;
+    uint increasedMax = 0;
+    uint increasedMin = 0;
+
+    address winAddress;
+    uint winAmount = 0;
+
+    function Bid(uint _amountMin, uint _amountMax, uint _increasedMax, uint _increasedMin){
+
+        amountMin = _amountMin;
+        amountMin = _amountMax;
+        amountMin = _increasedMax;
+        amountMin = _increasedMin;
     }
 
-    function expire(){
+    function increase(address _address, uint _amount){
 
-        expireState = 2;
-    }
-    function close(){
+       require(amountMin < _amount);
+       require(expireState == 1);
 
-        expireState = 0;
+       testExpire();
+
+       uint arrayIndex = bidders.set(_address, _amount);
+       winAddress = _address;
+       winAmount = _amount;
     }
 }
 
 contract Base is Wallet, Influence, Expire {
 
     uint id;
-    string refExtern = "default";
+    string refExtern;
     string serialNumber;
     string imageUrl;
 
-    string[] categoryNamesCount;
-    address[] childsCount;
-    address[] listCount;
+    MapStringString categories;
+    MapAddressBase childs;
+    MapAddressBase list;
 
-    mapping(string => string) categoryNames;
-    mapping(address => Base) childs;
-    mapping(address => Base) list;
+    function create(uint _id, uint _amount, string _category, string _serialNumber, string _refExtern, string _imageUrl){
 
-    function setSerialNumber(string _serialNumber){
-
-        serialNumber = _serialNumber;
-        uint serialNumbersCountIndex = serialNumbers.length;
-        serialNumbers[serialNumbersCountIndex] = _serialNumber;
-    }
-
-    function getSerialNumber() returns (string){
-
-        return serialNumber;
-    }
-
-    function getSerialNumberBytes32() returns (bytes32){
-
-        bytes32 a = stringToBytes32(serialNumber);
-
-        return a;
-    }
-
-    function setImageUrl(string _imageUrl){
-
-        imageUrl = _imageUrl;
-        uint imageUrlsCountIndex = imageUrls.length;
-        imageUrls[imageUrlsCountIndex] = _imageUrl;
-    }
-
-    function getImageUrl() returns (string){
-
-        return imageUrl;
-    }
-
-    function bytes32ToString(bytes32 x) constant returns (string) {
-
-        bytes memory bytesString = new bytes(32);
-        uint charCount = 0;
-        for (uint j = 0; j < 32; j++) {
-            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
-            if (char != 0) {
-                bytesString[charCount] = char;
-                charCount++;
-            }
-        }
-        bytes memory bytesStringTrimmed = new bytes(charCount);
-        for (j = 0; j < charCount; j++) {
-            bytesStringTrimmed[j] = bytesString[j];
-        }
-        return string(bytesStringTrimmed);
-    }
-
-    function stringToBytes32(string memory source) returns (bytes32 result) {
-        assembly {
-            result := mload(add(source, 32))
-        }
-    }
-
-    function getCategoryNameDefault() returns (string) {
-
-        string index = categoryNamesCount[0];
-
-        return categoryNames[index];
-    }
-
-    function getChildByAddress(address childAddress) returns (Base){
-
-        return childs[childAddress];
-    }
-
-    function getItemByAddress(address itemAddress) returns (Base){
-
-        return list[itemAddress];
-    }
-
-    function getChildById(uint childId) returns (Base){
-
-        address childAddress = childsCount[childId];
-
-        return childs[childAddress];
-    }
-
-    function getItemById(uint itemId) returns (Base){
-
-        address itemAddress = listCount[itemId];
-
-        return list[itemAddress];
-    }
-
-    function getChildsCount() returns (uint){
-
-        return childsCount.length;
-    }
-
-    function getListCount() returns (uint){
-
-        return listCount.length;
-    }
-
-    function create(uint _amount, string _categoryName, string _refExtern){
-
-        categoryNames[_categoryName] = _categoryName;
-        uint categoryNamesCountIndex = categoryNamesCount.length;
-        categoryNamesCount[categoryNamesCountIndex] = _categoryName;
+        id = _id;
         amount = _amount;
         refExtern = _refExtern;
-        owned();
-        list[this] = this;
-        uint listCountIndex = listCount.length;
-        listCount[listCountIndex] = this;
+        serialNumber = _serialNumber;
+        imageUrl =_imageUrl;
+        setCategoryName(string _categoryName);
     }
 
-    function addChild(Base child) {
+    function setChild(string _index, string _item)  returns (uint){
 
-        childs[child] = child;
-        uint childsCountIndex = childsCount.length;
-        childsCount[childsCountIndex] = child;
-        amount += child.getAmount();
-    }
-}
-
-contract Bid is Base {
-    address winnerAddress;
-    uint amountMin;
-    uint increaseMax = 0;
-    Artefact price;
-    uint winnerState = 0; // 0:not awarded 1:awarded
-
-    uint winAmountOrgRatio = 100;
-    uint winAmountOrgsRatio = 20;
-    uint winAmountEshopsRatio = 10;
-    uint winAmountContribsRatio = 5;
-
-    function transferOwnershipToWinner() {
-
-        owner = winnerAddress;
-        owner.transfer(amount);
+        return childs.set(_index, _item);
     }
 
-    function getWinnerState() returns (uint) {
+    function getChild(uint _arrayIndex)  returns (Base){
 
-        return winnerState;
+        return childs.get(_arrayIndex);
     }
 
-    function setWinnerState(uint _state) {
+    function getChildFromIndex(address _index)  returns (Base){
 
-        winnerState = _state;
+        return childs.getFromIndex(_index);
     }
 
-    function getWinnerAddress() returns (address) {
+    function setList(string _index, string _item)  returns (uint){
 
-        require(expireState != 2 && expireState != 0);
-
-        return winnerAddress;
+        return list.set(_index, _item);
     }
 
-    function getWinnerIncrease() returns (uint) {
+    function getList(uint _arrayIndex)  returns (Base){
 
-        require(expireState != 2 && expireState != 0);
-
-        return increaseMax;
+        return list.get(_arrayIndex);
     }
 
-    function setDateStart(uint _dateStart){
+    function getListFromIndex(address _index)  returns (Base){
 
-        dateStart = _dateStart;
+        return list.getFromIndex(_index);
     }
 
-    function setPrice(Artefact _artefact){
+    function getCategory(uint _arrayIndex) returns (string) {
 
-        price = _artefact;
+        return categories.get(_arrayIndex);
     }
 
-    function setAmountMin(uint _amountMin){
+    function getCategoryFromIndex(_index) returns (string) {
 
-        amountMin = _amountMin;
-        amount = amountMin;
+        return categories.getFromIndex(_index);
     }
 
-    function increase(address _from, uint _amountIncrease) returns (bool) {
+    function setCategory(string _name) returns (string) {
 
-        if(expireTest() == true) {
-
-            expire();
-            return true;
-        }
-        require(_amountIncrease > increaseMax);
-
-        increaseMax = _amountIncrease;
-        winnerAddress = _from;
-
-        return true;
+        return categories.set(_name);
     }
 }
+
 
 contract Personn is Base {
 
@@ -438,87 +467,112 @@ contract MyToken {
     }
 }
 
+
+contract Cost {
+
+  mapping(address => uint) positifsMap;
+  mapping(address => uint) negatifsMap;
+
+  address[] positifsAddress;
+  address[] negatifsAddress;
+
+}
+contract Transfert {
+
+  uint id;
+  address a;
+  uint amount;
+  uint amountEuro;
+  uint amountTotal;
+  string state;
+  Cost cost;
+
+  uint[] transfertInfoIds;
+  mapping(uint => TransfertInfo) transfertInfoMap;
+}
+
+contract MemberTypeCollector {
+
+  uint id;
+  string name = '';
+  uint artefactAmountTotal = 0;
+  uint coinAmountTotal = 0;
+  uint ratio = 0;
+  bool ratioPositif = true;
+
+  string ownersName = 'owners';
+  string creatorsName = 'creators';
+  string burnersName = 'burners';
+  string valorizatorsName = 'valorizators';
+  string operatorsName = 'operators';
+  string bidWinnersName = 'bidWinners';
+  string bidLoosersName = 'bidLoosers';
+
+  mapping(address => uint) addressArtefactAmountTotalMap;
+  mapping(address => uint) addressCoinAmountTotalMap;
+  address[] addressList;
+
+  mapping(uint => Member) nameMemberMap;
+  uint[] memberIds;
+
+  function MemberTypeCollector(){
+
+      createMemberType(ownersName, ownersRatio, ownersRatioPositif);
+      createMemberType(burnersName, creatorsRatio, creatorsRatioPositif);
+      createMemberType(creatorsName, burnersRatio, burnersRatioPositif);
+      createMemberType(valorizatorsName, valorizatorsRatio, valorizatorsRatioPositif);
+      createMemberType(operatorsName, operatorsRatio, operatorsRatioPositif);
+      createMemberType(bidWinnersName, bidWinnersRatio, bidWinnersRatioPositif);
+      createMemberType(bidLoosersName, bidLooserssRatio, bidLooserssRatioPositif);
+  }
+
+  function createMemberType(string _memberName, _distributeRatio, bool _ratioPositif){
+
+      uint membersIndex = memberIds.length;
+      Member member = new Member({name: _memberName, distributeRatio: _distributeRatio, id: membersIndex: ratioPositif: _ratioPositif});
+      memberIds[membersIndex] = membersIndex;
+  }
+
+}
+
 contract Coin is MyToken, Wallet, Influence {
 
-    struct Member {
-        uint id;
-        string name = '';
-        uint artefactAmountTotal = 0;
-        uint coinAmountTotal = 0;
-        uint ratio = 0;
-        bool ratioPositiv = true;
-        address[] addressList;
-        mapping(address => uint) addressArtefactAmountTotalMap;
-        mapping(address => uint) addressCoinAmountTotalMap;
-    }
-    uint[] memberIds;
-    mapping(uint => Member) nameMemberMap;
+    uint public artefactAmountTotalGlobal = 500000;
+    uint public coinAmountTotalGlobal = 100000;
+    uint public rateMin = (1 / 5);
 
-    struct Cost {
+    uint public ownersRatio = 0;
+    uint public creatorsRatio = 10;
+    uint public burnersRatio = 20;
+    uint public valorizatorsRatio = 1;
+    uint public operatorsRatio = 3;
+    uint public bidWinnersRatio = 1;
+    uint public bidLooserssRatio = 2;
 
-      mapping(address => uint) positifs;
-      mapping(address => uint) negatifs;
+    bool public ownersRatioPositif = true;
+    bool public creatorsRatioPositif = true;
+    bool public burnersRatioPositif = false;
+    bool public valorizatorsRatioPositif = true;
+    bool public operatorsRatioPositif = true;
+    bool public bidWinnersRatioPositif = true;
+    bool public bidLooserssRatioPositif = false;
 
-      address[] positifsAddress;
-      address[] negatifsAddress;
-    }
-
-    struct TransfertInfo {
-        uint id;
-        address a;
-        uint amount;
-        uint amountEuro;
-        uint amountTotal;
-        string state;
-        Cost cost;
-    }
-    uint[] transfertInfoIds;
-    mapping(uint => TransfertInfo) transfertInfoMap;
-
-    uint artefactAmountTotalGlobal = 500000;
-    uint coinAmountTotalGlobal = 100000;
-    uint rateMin = (1 / 5);
-
-    uint ownersRatio = 0;
-    uint creatorsRatio = 10;
-    uint burnersRatio = 20;
-    uint valorizatorsRatio = 1;
-    uint operatorsRatio = 3;
-    uint bidWinnersRatio = 1;
-    uint bidLooserssRatio = 2;
-
-    bool ownersRatioPositiv = true;
-    bool creatorsRatioPositiv = true;
-    bool burnersRatioPositiv = false;
-    bool valorizatorsRatioPositiv = true;
-    bool operatorsRatioPositiv = true;
-    bool bidWinnersRatioPositiv = true;
-    bool bidLooserssRatioPositiv = false;
-
-    string ownersName = 'owners';
-    string creatorsName = 'creators';
-    string burnersName = 'burners';
-    string valorizatorsName = 'valorizators';
-    string operatorsName = 'operators';
-    string bidWinnersName = 'bidWinners';
-    string bidLoosersName = 'bidLoosers';
-
-    function createMembers(){
-
-        createMember(ownersName, ownersRatio, ownersRatioPositiv);
-        createMember(burnersName, creatorsRatio, creatorsRatioPositiv);
-        createMember(creatorsName, burnersRatio, burnersRatioPositiv);
-        createMember(valorizatorsName, valorizatorsRatio, valorizatorsRatioPositiv);
-        createMember(operatorsName, operatorsRatio, operatorsRatioPositiv);
-        createMember(bidWinnersName, bidWinnersRatio, bidWinnersRatioPositiv);
-        createMember(bidLoosersName, bidLooserssRatio, bidLooserssRatioPositiv);
-    }
-
-    function createMember(string _memberName, _distributeRatio, bool _ratioPositiv){
-
-        uint membersIndex = memberIds.length;
-        Member member = new Member({name: _memberName, distributeRatio: _distributeRatio, id: membersIndex: ratioPositiv: _ratioPositiv});
-        memberIds[membersIndex] = membersIndex;
+    function Coin(
+        address masterOwner,
+        string standard,
+        string name,
+        string symbol,
+        uint8 decimals,
+        uint ownersRatio,
+        uint creatorsRatio,
+        uint burnersRatio,
+        uint valorizatorsRatio,
+        uint operatorsRatio,
+        uint bidWinnersRatio,
+        uint bidLooserssRatio,
+        uint artefactAmountTotalGlobal,
+        uint coinAmountTotalGlobal,
+        uint rateMin
     }
 
     function membersAdd(address _memberAddress){
@@ -531,9 +585,32 @@ contract Coin is MyToken, Wallet, Influence {
           nameMemberMap[i].coinAmountTotal = 0;
           nameMemberMap[i].addressArtefactAmountTotalMap[_memberAddress] = 0;
           nameMemberMap[i].addressCoinAmountTotalMap[_memberAddress] = 0;
+          nameMemberMap[i].cost.positifsMap[_memberAddress] = 0;
+          nameMemberMap[i].cost.negatifsMap[_memberAddress] = 0;
           uint countChild = nameMemberMap[i].addressList;
           nameMemberMap[i].addressList[countChild] = _memberAddress;
       }
+    }
+
+    function getTransfertInfo(transfertInfoId) returns (TransfertInfoId) {}
+
+        return transfertInfoMap[transfertInfoId];
+    }
+
+    function membersCostAddPositif(transfertInfoId, a) return (TransfertInfoMap transfertInfoMap){
+
+        transfertInfoMap[transfertInfoId].cost.positifsMap[a] += cost;
+        uint costIndex = transfertInfoMap[transfertInfoId].cost.positifsAddress.length();
+        transfertInfoMap[transfertInfoId].cost.negatifsAddress[costIndex] = a;
+
+        return transfertInfoMap;
+    }
+
+    function membersCostAddNegatif(){
+
+      transfertInfoMap[transfertInfoId].cost.negatifsMap[a] += cost;
+      uint costIndex = transfertInfoMap[transfertInfoId].cost.negatifsAddress.length();
+      transfertInfoMap[transfertInfoId].cost.negatifsAddress[costIndex] = a;
     }
 
     function distributeBuy(address _toAdderress, uint _amount) returns (uint transfertInfoId) payable {
@@ -544,41 +621,40 @@ contract Coin is MyToken, Wallet, Influence {
         string state = 'opened';
         TransfertInfo transfertInfo = new TransfertInfo({id: transfertInfoId, a: _toAdderress, state: state});
 
+        // members types
         for (uint i = 0; i < memberIds.length; i++) {
 
-            uint coinAmountTotal = member.coinAmountTotal;
-
+            // members
             for (uint j = 0; j < member.addressList.length; j++) {
 
                 address a = nameMemberMap[i].addressList[j];
                 uint coinAmountTotalMap = nameMemberMap[i].addressCoinAmountTotalMap[a];
                 uint ratio = coinAmountTotalMap / coinAmountTotal;
                 uint amountDistributed = amount * ratio;
-                cost += amountDistributed;
 
-                transferFrom(masterOwner, a, amountDistributed);
-
-                if(memberAddress == _toAdderress) {
+                if(memberAddress != _toAdderress) {
 
                     nameMemberMap[i].addressCoinAmountTotalMap[a] = _amount;
 
-                    if(nameMemberMap[i].ratioPositiv == true){
+                    if(nameMemberMap[i].ratioPositif == true){
 
-                      transfertInfoMap[transfertInfoId].cost.positifs[a] = cost;
-                      uint costIndex = transfertInfoMap[transfertInfoId].cost.negatifsAddress.length();
-                      transfertInfoMap[transfertInfoId].cost.positifsAddress[costIndex] = a;
+                      transfertInfoMap[transfertInfoId].cost.positifsMap[a] += cost;
+                      uint costIndex = transfertInfoMap[transfertInfoId].cost.positifsAddress.length();
+                      transfertInfoMap[transfertInfoId].cost.negatifsAddress[costIndex] = a;
+                      cost += amountDistributed;
                     }
                     else {
 
-                      transfertInfoMap[transfertInfoId].cost.negatifs[a] = cost;
+                      transfertInfoMap[transfertInfoId].cost.negatifsMap[a] += cost;
                       uint costIndex = transfertInfoMap[transfertInfoId].cost.negatifsAddress.length();
                       transfertInfoMap[transfertInfoId].cost.negatifsAddress[costIndex] = a;
+                      cost -= amountDistributed;
                     }
                 }
             }
         }
-        euro = (_amount + cost) * getRate();
-        coinAmountTotalGlobal += totalAmount;
+        uint euro = (_amount + cost) * getRate();
+        uint coinAmountTotalGlobal += totalAmount;
         transfertInfoMap[transfertInfoId].amountEuro = euro;
         transfertInfoMap[transfertInfoId].amount = _amount;
         transfertInfoMap[transfertInfoId].amountTotal = _amount + cost;
@@ -586,7 +662,7 @@ contract Coin is MyToken, Wallet, Influence {
         return transfertInfoId;
     }
 
-    function distributeBuyValidated(int transfertInfoId)(uint){
+    function distributeBuyValidated(int transfertInfoId) returns (uint) {
 
       transfertInfoMap[transfertInfoId].state = 'validated';
 
@@ -658,22 +734,23 @@ contract Coin is MyToken, Wallet, Influence {
 
 contract GiftCoin is Base, Coin {
 
+    address public masterOwner;
     string public standard = 'GiftCoin 0.1';
     string public name = 'Gift Coin';
     string public symbol = 'GFT';
     uint8 public decimals = 0;
 
-    uint ownersRatio = 0;
-    uint creatorsRatio = 10;
-    uint burnersRatio = 20;
-    uint valorizatorsRatio = 1;
-    uint operatorsRatio = 3;
-    uint bidWinnersRatio = 1;
-    uint bidLooserssRatio = 2;
+    uint public ownersRatio = 0;
+    uint public creatorsRatio = 10;
+    uint public burnersRatio = 20;
+    uint public valorizatorsRatio = 1;
+    uint public operatorsRatio = 3;
+    uint public bidWinnersRatio = 1;
+    uint public bidLooserssRatio = 2;
 
-    uint artefactAmountTotalGlobal = 500000;
-    uint coinAmountTotalGlobal = 100000;
-    uint rateMin = (1 / 5);
+    uint public artefactAmountTotalGlobal = 500000;
+    uint public coinAmountTotalGlobal = 100000;
+    uint public rateMin = (1 / 5);
 
     mapping(address => Personn) public personns;
     mapping(address => Grantee) public grantees;
