@@ -2,8 +2,6 @@ pragma solidity ^0.4.11;
 
 library DataAccess {
 
-
-
   function arrayUintAdd(uint[] _array, uint _data) returns (_array, uint arrayIndex){
 
     arrayIndex = _array.length;
@@ -43,9 +41,18 @@ library DataAccess {
   }
 }
 
-contract MapStringString {
+contract MapHelper {
 
   bytes32[] count;
+
+  function getlength() return (uint){
+
+      return count.length;
+  }
+}
+
+contract MapStringString is MapHelper {
+
   mapping(string => string) map;
 
   function bytes32ToString(bytes32 x) constant returns (string) {
@@ -97,9 +104,8 @@ contract MapStringString {
   }
 }
 
-contract MapAddressBase {
+contract MapAddressBase is MapHelper {
 
-  address[] count;
   mapping(address => Base) map;
 
   function arrayAddessAdd(address _data) returns (uint arrayIndex){
@@ -127,9 +133,8 @@ contract MapAddressBase {
   }
 }
 
-contract MapAddressUint {
+contract MapAddressUint is MapHelper {
 
-  address[] count;
   mapping(address => uint) map;
 
   function arrayAddessAdd(address _data) returns (uint arrayIndex){
@@ -233,6 +238,8 @@ contract Expire {
 
         expireState = 2;
 
+        require(renewOffSet != 0);
+
         if(now > (renewOffSet + expireGetDateEnd())) {
 
             expireDateStart = now;
@@ -276,6 +283,7 @@ contract Bid is Expire {
     uint increasedMax = 0;
     uint increasedMin = 0;
 
+    bool winnerAwarded = false;
     address winAddress;
     uint winAmount = 0;
 
@@ -287,16 +295,24 @@ contract Bid is Expire {
         amountMin = _increasedMin;
     }
 
-    function increase(address _address, uint _amount){
+    function increase(address _address, uint _amountAdded){
 
-       require(amountMin < _amount);
        require(expireState == 1);
 
        testExpire();
 
-       uint arrayIndex = bidders.set(_address, _amount);
-       winAddress = _address;
-       winAmount = _amount;
+       if(expireState == 1 && (amountMin < (winAmount + _amountAdded) && amountMax > (winAmount + _amountAdded))) {
+
+         uint arrayIndex = bidders.set(_address, _amount);
+
+         winAddress = _address;
+         winAmount = _amount;
+       }
+       if(expireState == 2 && winnerAwarded === false && amountMin < winAmount && amountMax > winAmount) {
+
+            winnerAwarded = true;
+            expireClose();
+       }
     }
 }
 
@@ -366,7 +382,6 @@ contract Base is Wallet, Influence, Expire {
         return categories.set(_name);
     }
 }
-
 
 contract Personn is Base {
 
